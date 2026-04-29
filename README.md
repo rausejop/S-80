@@ -210,6 +210,10 @@ Cuando el cockpit HUD está activo, las siguientes teclas operan directamente lo
 | `8` | EOT → FLANCO (flank speed, 20,5 kn) |
 | `F` | Disparar el primer tubo en estado OPEN |
 | `P` | Toggle del periscopio (Izar / Bajar) |
+| `M` | Abrir / Cerrar el **Mapa Táctico** |
+| `C` | Abrir / Cerrar el **modal de Tripulación** |
+| `R` | **Soltar el control** del tripulante (volver a vuelo libre) |
+| `ESC` | Cerrar modal abierto · liberar el ratón |
 
 ### Controles táctiles (móvil/tableta)
 
@@ -393,6 +397,224 @@ Tabla de subsistemas con LEDs animados (verde = ON, ámbar = WARN, rojo = ERR, g
 | Bombear→PROA | Pasa 10% del trim popa al de proa |
 | Bombear→POPA | Pasa 10% del trim proa al de popa |
 | ⚠ SOPLO EMERG. (rojo) | Vacía todos los MBT al instante + planos +25° |
+
+---
+
+## Tripulación · Divisas oficiales de la Armada
+
+El submarino contiene **19 miembros de la dotación** identificados con **nombre, rango, función y avatar**, modelados en 3D con uniforme y divisas según el [Anexo de Divisas de la Armada Española](https://es.wikipedia.org/wiki/Anexo:Divisas_de_los_cuerpos_de_la_Armada_Espa%C3%B1ola).
+
+### Roster completo
+
+#### Cuerpo de Oficiales (8)
+
+| ID | Empleo | Nombre | Función | Galones |
+|---|---|---|---|---|
+| C01 | **CF** Capitán de Fragata | D. Antonio Romero Martín | **Comandante** | 3 anchos |
+| C02 | **CC** Capitán de Corbeta | D. Carlos Vega López | Segundo Comandante | 2 anchos + 1 fino |
+| C03 | **TN** Teniente de Navío | D. Manuel García Pérez | Oficial de Operaciones | 2 anchos |
+| C04 | **TN** Teniente de Navío | D. Javier Ruiz Hernández | Oficial de Armas / TASW | 2 anchos |
+| C05 | **AN** Alférez de Navío | D. Roberto Díaz Castro | Oficial de Derrota | 1 ancho + 1 fino |
+| C06 | **AN** Alférez de Navío | D. Fernando López Moreno | Oficial Ingeniero | 1 ancho + 1 fino |
+| C07 | **AN** Alférez de Navío | D. Luis Sánchez Ortiz | Oficial de Sistemas (CIS) | 1 ancho + 1 fino |
+| C08 | **AF** Alférez de Fragata | D. Ricardo Torres Vega | Oficial Subalterno | 1 ancho |
+
+#### Cuerpo de Suboficiales (8 modelados de 15)
+
+| ID | Empleo | Nombre | Función | Cabos invertidos |
+|---|---|---|---|---|
+| C09 | **SBT** Subteniente | D. Pedro Sánchez Díaz | Suboficial Mayor de Buque | 4 cabos |
+| C10 | **BG** Brigada | D. José Martínez Ruiz | Timonel | 3 cabos |
+| C11 | **BG** Brigada | D. Andrés Ramos Vargas | Mecánico Mayor | 3 cabos |
+| C12 | **SP** Sargento Primero | D. Antonio Jiménez Soto | Operador Sonar Pasivo | 2 cabos |
+| C13 | **SP** Sargento Primero | D. Daniel Romero Castillo | Operador Sonar Activo | 2 cabos |
+| C14 | **SG** Sargento | D. Rafael Méndez Cruz | Operador EW / ESM | 1 cabo |
+| C15 | **SG** Sargento | D. Miguel Pérez Aguilar | Operador Comunicaciones | 1 cabo |
+| C16 | **SG** Sargento | D. Francisco Gómez Reyes | Operador AIP | 1 cabo |
+
+#### Marinería y Tropa (3 modelados de 17)
+
+| ID | Empleo | Nombre | Función | Cabos rectos |
+|---|---|---|---|---|
+| C17 | **CB1** Cabo Primero | M. Diego Navarro Lara | Cabo Cocinero | 3 cabos rojos |
+| C18 | **CB** Cabo | M. Alberto Soto Ferrer | Cabo de Guardia | 2 cabos rojos |
+| C19 | **MR** Marinero | M. Sergio Vázquez Ortega | Marinero Operativo Armas | — |
+
+### Divisas reglamentarias
+
+Cada figura 3D del tripulante incluye las **divisas reglamentarias** de su empleo, modeladas como geometría visible:
+
+#### Oficiales — Palas (`shoulder boards`)
+- Pequeño rectángulo negro encima de cada hombro
+- Galones dorados horizontales sobre la pala (uno por cada `stripe`)
+- Para `stripes` con valor X.5 se añade un galón fino más
+- En la **visera de la gorra**, los oficiales con ≥ 3 galones tienen ribete dorado
+
+#### Suboficiales — Cabos invertidos
+- Pequeñas barras color crema/dorado en el brazo izquierdo
+- Disposición vertical en V invertida
+- Número de cabos según rango (5=SBM, 4=SBT, 3=BG, 2=SP, 1=SG)
+
+#### Marinería — Cabos rectos
+- Pequeñas barras color rojo en el brazo izquierdo
+- Disposición horizontal
+- Número según rango (4=CBM, 3=CB1, 2=CB, 0=Marinero)
+
+### Avatares procedurales
+
+Cada tripulante tiene una **fotografía/avatar generada proceduralmente** mediante canvas (96×96 px) con:
+
+- **Fondo degradado** con color según categoría (azul oficial / azul suboficial / azul marinería)
+- **Marco coloreado** según rango: dorado oficiales, plata suboficiales, azul marinería
+- **Cara con tono de piel variable** (basado en hash del ID — todos diferentes)
+- **Pelo de distinto color** (5 tonalidades aleatorias)
+- **Gorra con emblema ⚓** (oficiales y suboficiales con galón en la visera para 3+ galones)
+- **Ojos, cejas, nariz, boca** dibujados con primitivas
+- **Posible barba** (1 de cada 4 según hash)
+- **Cuello uniforme con corbata** para oficiales, camisa blanca debajo
+- **Pala miniatura** en la esquina inferior derecha mostrando los galones del rango
+- **Identificador del tripulante** (C01-C19) en la esquina superior izquierda
+
+### Selección y toma de control
+
+Pulsando **`C`** o el botón **👤 Tripulación** se abre el modal de roster con todos los tripulantes agrupados por categoría. Al hacer **click en cualquier tarjeta**:
+
+1. **Teleporta al jugador** a la posición exacta del tripulante
+2. **Orienta la cámara** según la dirección del tripulante (ej: timonel mirando al frente)
+3. **Activa modo física** automáticamente (gravedad)
+4. **Oculta la figura 3D** del tripulante (el jugador es ahora ese tripulante)
+5. **Muestra el banner** superior con avatar + nombre + rango + función + botón de soltar
+6. La tarjeta del tripulante controlado se **resalta en verde** en el modal
+
+Pulsando **R** o el botón **✕ Soltar control** del banner:
+- Restaura la figura 3D del tripulante
+- Desactiva modo física
+- Devuelve al modo vuelo libre
+
+---
+
+## Modo Física
+
+Toggle accesible mediante botón **🏃 Modo Física: ON/OFF** o automáticamente al tomar control de un tripulante.
+
+### Cuando está ACTIVADO
+
+| Comportamiento | Detalle |
+|---|---|
+| **Gravedad** | -9,8 m/s² aplicada constantemente al jugador |
+| **Detección de suelo** | Dentro del casco: `FLOOR_Y + altura_ojos`. Fuera: `−25 m + 1,65 m` (lecho marino) |
+| **Detección de techo** | Dentro del casco: `CEIL_Y` (no se puede atravesar el techo) |
+| **Velocidad de paseo** | 2,8 m/s (caminar) en lugar de 4,5 m/s (vuelo) |
+| **Salto** | `Espacio` impulsa con velocidad +4 m/s solo si está apoyado en el suelo |
+| **Bajar** | `Shift`/`Ctrl` desactivado (no se puede volar hacia abajo) |
+| **Pose sentada** | Si controlas a un tripulante sentado, los ojos están a 0,95 m (no 1,65 m) |
+| **Estabilidad temporal** | `dt` saturado a 50 ms para evitar saltos físicos en lag |
+
+### Cuando está DESACTIVADO (por defecto)
+
+- Vuelo libre 6-DoF (modo original)
+- `Espacio`/`Shift` mueven verticalmente
+- Sin gravedad, sin colisiones
+
+---
+
+## Carta Náutica Realista
+
+Widget modal de pantalla completa con una **carta de navegación procedural** del Mediterráneo Occidental al estilo INT-1. Se invoca con la tecla `M` o el botón **🗺 Mapa Táctico** en la barra izquierda.
+
+### Estética cartográfica
+
+Sigue las convenciones de las **cartas náuticas internacionales (INT-1)**:
+
+| Color | Significado |
+|---|---|
+| Amarillo `#f0e5b6` | **Tierra** (con borde marrón) |
+| Azul claro `#cfe5f0` | **Aguas someras** (≤ 200 m, plataforma continental) |
+| Azul medio `#9ec6dc` | **Aguas profundas** (> 200 m) |
+| Línea discontinua azul-gris | **Isobata 200 m** (talud continental) |
+
+### Coordenadas en formato carta
+
+Las coordenadas se muestran en **grados + minutos decimales** (formato estándar de cartas náuticas):
+
+```
+37°35.40'N  000°59.40'W
+```
+
+en lugar del formato decimal anterior.
+
+### Cobertura geográfica
+
+- **9 polígonos de costa**: Península Ibérica · Norte de África · Italia · Sicilia · Cerdeña · Córcega · Mallorca · Menorca · Ibiza
+- **21 puertos etiquetados** en dos categorías:
+  - **Bases navales** (cuadrado amarillo con anillo): Cartagena (BS), Rota
+  - **Puertos comerciales** (cuadrado azul): Algeciras, Málaga, Almería, Valencia, Barcelona, Palma, Mahón, Toulon, Marsella, Génova, Cagliari, Argel, Orán, Túnez, Bizerta, Roma, Nápoles, Casablanca, Lisboa
+- **13 faros** con su característica luminosa (al estilo carta), p.ej. `Cabo de Palos · Fl(2)10s`
+- **2 áreas restringidas (PRA)** marcadas en rojo: Z-1 PRA Cartagena, Z-2 PRA C. Gata
+- **1 sistema de separación de tráfico (TSS)** en el Estrecho de Gibraltar (líneas paralelas magenta)
+- **20 sondas batimétricas** (números mostrando la profundidad en metros en aguas profundas)
+
+### Elementos dinámicos
+
+| Elemento | Color | Descripción |
+|---|---|---|
+| **S-81 Isaac Peral** | Verde | Rombo orientado al rumbo + vector de velocidad (proporcional a kn) + etiqueta con rumbo/velocidad/profundidad |
+| **Anillos sonar** | Verde tenue | 40 nm pasivo (línea discontinua) y 15 nm activo |
+| **Submarino enemigo** | Rojo | Marca contactos clasificados SUBM |
+| **Mercante** | Naranja | Marca contactos clasificados MERC |
+| **Pesquero** | Cian | Marca contactos clasificados PESQ |
+| **Biológico** | Verde claro | Marca contactos BIOLG (cetáceos, etc.) |
+| **Destino** | Amarillo | Triángulo con "D" + ruta discontinua desde el buque |
+
+Cada contacto incluye:
+- Marcador circular con borde según confianza (HI=blanco, MID=gris claro, LOW=gris oscuro)
+- Vector de movimiento del contacto (en su demora)
+- Etiqueta con ID + clasificación + velocidad
+
+### Interacciones
+
+| Acción | Comando |
+|---|---|
+| Abrir/Cerrar mapa | Tecla `M` · Botón `🗺 Mapa Táctico` · Click en `✕` · `ESC` |
+| Zoom in/out | Rueda del ratón · Botones `+ Zoom` / `− Zoom` |
+| Pan (mover el centro) | Click izq. + arrastrar |
+| Centrar en el buque | Botón `⊙ Centrar buque` (vuelve a modo *follow*) |
+| Fijar destino | **Doble click** en cualquier punto del mapa |
+| Borrar destino | Botón `✕ Borrar destino` |
+| Auto-pilot | Botón `🤖 Auto-pilot: ON/OFF` (requiere destino fijado) |
+
+### Auto-pilot
+
+Cuando se activa el auto-pilot con un destino fijado, el simulador:
+
+1. Calcula la **demora hacia el destino** en cada `simTick`
+2. Calcula el **error de rumbo** entre el rumbo actual y la demora objetivo
+3. Aplica un **controlador proporcional al timón** (`rudder.ordered = error × 1,5`, limitado a ±35°)
+4. Cuando la **distancia es < 0,5 nm**, llega a destino: limpia el destino, pone EOT a PARO, desactiva auto-pilot
+
+Esto permite "trazar una ruta a Argel" haciendo doble click sobre Argel y pulsando auto-pilot — el buque corregirá el rumbo automáticamente hasta llegar.
+
+### Información en pantalla del mapa
+
+- **Centro**: lat/lon del centro de la vista
+- **Buque**: lat/lon actual del S-81
+- **Zoom**: factor (0,4× a 64×)
+- **Destino**: lat/lon del waypoint
+- **Distancia**: nm + demora al destino
+- **ETA**: horas estimadas a velocidad actual
+
+### Cuadrícula adaptativa
+
+El paso de la grilla lat/lon se ajusta al zoom:
+- Zoom < 2× → grilla cada 2°
+- 2× ≤ Zoom < 4× → grilla cada 1°
+- 4× ≤ Zoom < 8× → grilla cada 0,5°
+- 8× ≤ Zoom → grilla cada 0,25°
+
+### Brújula y escala
+
+- **Rosa de los vientos**: flecha "N" en la esquina superior derecha
+- **Barra de escala**: línea graduada en la esquina inferior izquierda, en nm
 
 ---
 

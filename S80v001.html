@@ -260,7 +260,221 @@
         .ballast-actions button.danger { border-color: #aa4040; color: #ffaaaa; }
         .ballast-actions button.danger:hover { background: #4a1a1a; }
 
-        #hudToggleBtn { top: 214px; }
+        #hudToggleBtn  { top: 214px; }
+        #mapToggleBtn  { top: 242px; }
+        #crewToggleBtn { top: 270px; }
+        #physicsBtn    { top: 298px; }
+
+        /* ===== MODAL DE TRIPULACIÓN ===== */
+        #crew-modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75);
+            display: none;
+            z-index: 200;
+            align-items: center; justify-content: center;
+            font-family: 'Consolas','Courier New',monospace;
+        }
+        #crew-modal.visible { display: flex; }
+        #crew-modal-content {
+            position: relative;
+            background: linear-gradient(135deg, rgba(8,22,30,0.98), rgba(12,30,22,0.98));
+            border: 2px solid #3a8a5a;
+            border-radius: 6px;
+            padding: 12px 14px;
+            color: #6fdca0;
+            box-shadow: 0 0 30px rgba(40,160,90,0.4);
+            max-width: 1100px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        #crew-modal-close {
+            position: absolute; top: 8px; right: 14px;
+            cursor: pointer; color: #ff6060;
+            font-size: 18px; font-weight: bold;
+        }
+        #crew-stats {
+            font-size: 11px; color: #aacfbf;
+            margin: 4px 0 10px 0;
+            display: flex; gap: 18px;
+        }
+        #crew-stats b { color: #ffd54a; }
+        #crew-roster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px;
+        }
+        .crew-card {
+            background: rgba(8, 22, 30, 0.7);
+            border: 1px solid #2a5a3a;
+            border-radius: 4px;
+            padding: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+            position: relative;
+        }
+        .crew-card:hover {
+            background: rgba(40, 100, 50, 0.4);
+            border-color: #ffd54a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .crew-card.officer { border-color: #ffd54a; }
+        .crew-card.nco     { border-color: #ddccaa; }
+        .crew-card.seaman  { border-color: #4a90c0; }
+        .crew-card.controlled {
+            background: rgba(80, 200, 100, 0.25);
+            border-color: #4fff80;
+            box-shadow: 0 0 10px #4fff80;
+        }
+        .crew-card .crew-avatar {
+            display: block;
+            width: 96px; height: 96px;
+            margin: 0 auto 4px auto;
+            border-radius: 4px;
+        }
+        .crew-card .crew-name {
+            color: #fff; font-weight: bold;
+            font-size: 10px; line-height: 1.2;
+            margin-bottom: 2px;
+            min-height: 24px;
+        }
+        .crew-card .crew-rank {
+            color: #ffd54a; font-size: 11px;
+            font-weight: bold; margin-bottom: 2px;
+        }
+        .crew-card .crew-fn {
+            color: #aacfbf; font-size: 9px;
+            line-height: 1.2; min-height: 22px;
+        }
+        .crew-card .crew-comp {
+            font-size: 9px; color: #88aacc;
+            margin-top: 3px;
+            border-top: 1px dotted #1a3a2a;
+            padding-top: 2px;
+        }
+        .crew-section-title {
+            color: #ffd54a; font-weight: bold;
+            font-size: 12px; letter-spacing: 1px;
+            margin: 12px 0 4px 0;
+            border-bottom: 1px solid #3a8a5a;
+            padding-bottom: 2px;
+            text-transform: uppercase;
+        }
+
+        /* ===== BANNER DE CONTROL ===== */
+        #control-banner {
+            position: fixed;
+            top: 10px; left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            background: rgba(8, 22, 30, 0.95);
+            border: 2px solid #4fff80;
+            border-radius: 5px;
+            padding: 6px 14px;
+            color: #fff; z-index: 150;
+            font-family: 'Consolas',monospace;
+            font-size: 12px;
+            box-shadow: 0 0 14px rgba(80, 255, 130, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #control-banner.active { display: flex; }
+        #control-banner img {
+            width: 40px; height: 40px;
+            border-radius: 3px;
+            border: 1px solid #ffd54a;
+        }
+        #control-banner .ctrl-label { color: #aacfbf; font-size: 10px; }
+        #control-banner .ctrl-name  { color: #ffd54a; font-weight: bold; }
+        #control-banner .ctrl-fn    { color: #6fdca0; font-size: 10px; }
+        #control-banner button {
+            margin-left: 6px;
+            padding: 4px 10px;
+            background: #6a1a1a;
+            color: #fff;
+            border: 1px solid #ff4040;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: inherit;
+        }
+        #control-banner button:hover { background: #8a2020; }
+
+        /* ===== MAPA TÁCTICO MODAL ===== */
+        #map-modal {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 200;
+            align-items: center; justify-content: center;
+            font-family: 'Consolas','Courier New',monospace;
+        }
+        #map-modal.visible { display: flex; }
+        #map-modal-content {
+            position: relative;
+            background: linear-gradient(135deg, rgba(8,22,30,0.98), rgba(12,30,22,0.98));
+            border: 2px solid #3a8a5a;
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: #6fdca0;
+            box-shadow: 0 0 30px rgba(40,160,90,0.4);
+        }
+        #map-modal-close {
+            position: absolute; top: 6px; right: 12px;
+            cursor: pointer; color: #ff6060;
+            font-size: 18px; font-weight: bold;
+            user-select: none;
+        }
+        #map-modal-close:hover { color: #ff9090; }
+        .map-title {
+            color: #ffd54a; font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px; letter-spacing: 1.5px;
+            margin: 0 0 8px 0; padding-right: 30px;
+        }
+        #map-modal-controls {
+            display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap;
+            align-items: center;
+        }
+        #map-modal-controls button {
+            padding: 5px 10px; cursor: pointer;
+            background: #0e1c20; border: 1px solid #2a5a3a;
+            color: #6fdca0; font-size: 11px; border-radius: 2px;
+            font-family: inherit;
+        }
+        #map-modal-controls button:hover { background: #1a3a2a; }
+        #map-modal-controls button.active {
+            background: #2d6e3a; color: #ffd54a; border-color: #ffd54a;
+        }
+        #map-modal-controls .ctrl-hint {
+            margin-left: auto; font-size: 10px; color: #aacfbf;
+        }
+        #map-canvas {
+            display: block;
+            background: #001828;
+            cursor: crosshair;
+            border: 1px solid #1a4a2a;
+        }
+        #map-modal-info {
+            display: flex; gap: 18px;
+            margin-top: 6px; font-size: 11px;
+            color: #aacfbf;
+        }
+        #map-modal-info .hud-val { color: #ffd54a; }
+        #map-modal-legend {
+            margin-top: 6px; font-size: 10px;
+            display: flex; gap: 14px; flex-wrap: wrap;
+            color: #aacfbf;
+            border-top: 1px solid #1a3a2a;
+            padding-top: 4px;
+        }
+        .legend-dot {
+            display: inline-block; width: 9px; height: 9px;
+            border-radius: 50%; margin-right: 4px; vertical-align: middle;
+            border: 1px solid #fff;
+        }
 
         @media (max-width: 1380px) {
             #helm-panel { width: 520px; }
@@ -303,7 +517,10 @@
 
     <button id="toggleHull"  class="topBtn">Casco: Semitransparente</button>
     <button id="toggleSpeed" class="topBtn">Velocidad: Normal</button>
-    <button id="hudToggleBtn" class="topBtn">Cockpit HUD: ON</button>
+    <button id="hudToggleBtn"  class="topBtn">Cockpit HUD: ON</button>
+    <button id="mapToggleBtn"  class="topBtn">🗺 Mapa Táctico (M)</button>
+    <button id="crewToggleBtn" class="topBtn">👤 Tripulación (C)</button>
+    <button id="physicsBtn"    class="topBtn">🏃 Modo Física: OFF</button>
     <select id="teleport" class="topBtn">
         <option value="">— Teletransportarse a... —</option>
         <option value="ext">Exterior (vista general)</option>
@@ -481,6 +698,72 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- ===================== BANNER DE CONTROL DE TRIPULANTE ===================== -->
+    <div id="control-banner">
+        <img id="control-avatar" src="" alt="">
+        <div>
+            <div class="ctrl-label">CONTROLANDO:</div>
+            <div><span class="ctrl-name" id="control-name"></span> <span style="color:#aacfbf;">(<span id="control-rank"></span>)</span></div>
+            <div class="ctrl-fn" id="control-fn"></div>
+        </div>
+        <button id="control-release">✕ Soltar control</button>
+    </div>
+
+    <!-- ===================== MODAL DE TRIPULACIÓN ===================== -->
+    <div id="crew-modal">
+      <div id="crew-modal-content">
+        <div id="crew-modal-close" title="Cerrar (ESC o C)">✕</div>
+        <div class="map-title">Dotación · S-81 Isaac Peral · 40 efectivos · 19 modelados</div>
+        <div id="crew-stats">
+            <span>Oficiales: <b>8</b></span>
+            <span>Suboficiales: <b>15</b></span>
+            <span>Marinería: <b>17</b></span>
+            <span style="color:#aacfbf;font-style:italic;">Click sobre un tripulante para tomar el control y moverse en su lugar</span>
+        </div>
+        <div id="crew-roster-content"><!-- generated --></div>
+      </div>
+    </div>
+
+    <!-- ===================== MAPA TÁCTICO MODAL ===================== -->
+    <div id="map-modal">
+      <div id="map-modal-content">
+        <div id="map-modal-close" title="Cerrar (ESC o M)">✕</div>
+        <div class="map-title">Mapa Táctico · Mediterráneo Occidental · S-81 Isaac Peral</div>
+        <div id="map-modal-controls">
+          <button id="map-zoom-in">＋ Zoom</button>
+          <button id="map-zoom-out">－ Zoom</button>
+          <button id="map-recenter">⊙ Centrar buque</button>
+          <button id="map-autopilot">🤖 Auto-pilot: OFF</button>
+          <button id="map-clear-dest">✕ Borrar destino</button>
+          <span class="ctrl-hint">Doble click: fijar destino · Arrastrar: panear · Rueda: zoom</span>
+        </div>
+        <canvas id="map-canvas" width="780" height="520"></canvas>
+        <div id="map-modal-info">
+          <span>Centro: <span class="hud-val" id="map-center-info">37,59°N 0,99°W</span></span>
+          <span>Buque: <span class="hud-val" id="map-pos-info">37,59°N 0,99°W</span></span>
+          <span>Zoom: <span class="hud-val" id="map-zoom-info">1×</span></span>
+          <span>Destino: <span class="hud-val" id="map-dest-info">—</span></span>
+          <span>Distancia: <span class="hud-val" id="map-dist-info">—</span></span>
+          <span>ETA: <span class="hud-val" id="map-eta-info">—</span></span>
+        </div>
+        <div id="map-modal-legend">
+          <span><span class="legend-dot" style="background:#4fff80;"></span>S-81</span>
+          <span><span class="legend-dot" style="background:#ff4040;"></span>Submarino</span>
+          <span><span class="legend-dot" style="background:#ffaa00;"></span>Mercante</span>
+          <span><span class="legend-dot" style="background:#aacccc;"></span>Pesquero</span>
+          <span><span class="legend-dot" style="background:#88dd88;"></span>Biológico</span>
+          <span><span class="legend-dot" style="background:#ffd54a;"></span>Destino</span>
+          <span><span class="legend-dot" style="background:#ffd54a;border-radius:0;"></span>Base SBM</span>
+          <span><span class="legend-dot" style="background:#88aacc;border-radius:0;"></span>Puerto</span>
+          <span><span class="legend-dot" style="background:#d040d0;"></span>Faro</span>
+          <span><span class="legend-dot" style="background:#cfe5f0;border:1px solid #7a9ab0;"></span>≤ 200 m</span>
+          <span><span class="legend-dot" style="background:#9ec6dc;"></span>&gt; 200 m</span>
+          <span><span class="legend-dot" style="background:rgba(220,80,80,0.3);border:1px dashed #cc4040;"></span>Área restringida</span>
+          <span><span class="legend-dot" style="background:#a040c0;"></span>TSS</span>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -1122,6 +1405,1253 @@
         document.getElementById('hudToggleBtn').textContent = 'Cockpit HUD: ' + (on ? 'ON' : 'OFF');
     }
 
+    // ===================== MAPA TÁCTICO =====================
+    const mapState = {
+        centerLat: 37.59, centerLon: -0.99,
+        zoom: 1, follow: true, autoPilot: false,
+        destination: null,
+        visible: false,
+        panning: false, lastX: 0, lastY: 0,
+        lastDraw: 0
+    };
+
+    // Polígonos de costa (lon, lat) simplificados para el Mediterráneo occidental
+    const COASTLINES = [
+        { name: 'Iberia', coords: [
+            [-9.5,36.0],[-7.4,36.5],[-5.6,36.0],[-5.4,36.15],[-4.8,36.7],
+            [-3.0,36.7],[-2.0,36.7],[-0.7,37.6],[-0.5,38.6],[0.0,39.5],
+            [0.2,40.1],[0.9,40.7],[1.5,41.2],[2.2,41.4],[3.2,42.0],
+            [3.0,42.4],[1.5,42.5],[-1.0,43.3],[-3.0,43.5],[-5.0,43.6],
+            [-7.0,43.6],[-8.9,43.4],[-9.3,42.0],[-8.8,40.0],[-8.5,38.5],
+            [-9.0,37.0],[-9.5,36.0]
+        ]},
+        { name: 'NorthAfrica', coords: [
+            [-5.5,35.9],[-5.4,35.85],[-4.0,35.2],[-2.5,35.1],[-1.0,35.4],
+            [0.5,35.9],[3.0,36.7],[5.0,36.6],[7.0,36.95],[9.0,37.4],
+            [10.5,37.3],[10.8,36.5],[11.0,33.5],[8.0,32.5],[2.0,32.0],
+            [-3.0,30.5],[-7.0,31.5],[-9.5,31.5],[-9.5,35.5],[-6.0,35.85],[-5.5,35.9]
+        ]},
+        { name: 'Italy', coords: [
+            [7.5,44.0],[8.5,44.4],[10.5,44.4],[12.5,45.5],[13.8,45.6],
+            [13.5,42.7],[14.8,42.0],[16.0,41.4],[18.5,40.1],[18.4,39.8],
+            [17.0,38.9],[16.0,37.9],[15.6,38.2],[15.0,37.9],[12.0,37.6],
+            [10.0,40.0],[8.5,42.5],[7.5,43.6],[7.5,44.0]
+        ]},
+        { name: 'Sicily', coords: [
+            [12.4,37.97],[12.55,38.18],[13.2,38.24],[14.7,38.3],[15.55,38.27],
+            [15.1,37.5],[15.3,36.7],[14.5,36.65],[12.6,37.6],[12.4,37.97]
+        ]},
+        { name: 'Sardinia', coords: [
+            [8.2,41.25],[9.1,41.25],[9.8,41.0],[9.7,39.4],[9.0,38.9],
+            [8.5,38.95],[8.4,40.7],[8.2,41.25]
+        ]},
+        { name: 'Corsica', coords: [
+            [8.55,43.0],[9.55,42.8],[9.5,41.65],[8.6,41.45],[8.55,43.0]
+        ]},
+        { name: 'Mallorca', coords: [
+            [2.35,39.45],[2.4,39.85],[3.1,39.95],[3.5,39.78],[3.4,39.32],[2.75,39.27],[2.35,39.45]
+        ]},
+        { name: 'Menorca', coords: [
+            [3.82,39.82],[3.85,40.05],[4.4,40.06],[4.32,39.82],[3.82,39.82]
+        ]},
+        { name: 'Ibiza', coords: [
+            [1.21,38.85],[1.27,39.05],[1.65,39.05],[1.62,38.78],[1.30,38.74],[1.21,38.85]
+        ]}
+    ];
+
+    const PORTS = [
+        { name: 'Cartagena',   lat: 37.59, lon: -0.99, base: true },
+        { name: 'Rota',        lat: 36.62, lon: -6.36, base: true },
+        { name: 'Algeciras',   lat: 36.13, lon: -5.45 },
+        { name: 'Málaga',      lat: 36.72, lon: -4.42 },
+        { name: 'Almería',     lat: 36.83, lon: -2.46 },
+        { name: 'Valencia',    lat: 39.47, lon: -0.38 },
+        { name: 'Barcelona',   lat: 41.38, lon:  2.18 },
+        { name: 'Palma',       lat: 39.57, lon:  2.65 },
+        { name: 'Mahón',       lat: 39.89, lon:  4.27 },
+        { name: 'Toulon',      lat: 43.12, lon:  5.93 },
+        { name: 'Marsella',    lat: 43.30, lon:  5.37 },
+        { name: 'Génova',      lat: 44.40, lon:  8.93 },
+        { name: 'Cagliari',    lat: 39.22, lon:  9.12 },
+        { name: 'Argel',       lat: 36.75, lon:  3.05 },
+        { name: 'Orán',        lat: 35.70, lon: -0.63 },
+        { name: 'Túnez',       lat: 36.81, lon: 10.18 },
+        { name: 'Bizerta',     lat: 37.27, lon:  9.87 },
+        { name: 'Roma',        lat: 41.90, lon: 12.50 },
+        { name: 'Nápoles',     lat: 40.85, lon: 14.27 },
+        { name: 'Casablanca',  lat: 33.59, lon: -7.62 },
+        { name: 'Lisboa',      lat: 38.72, lon: -9.14 }
+    ];
+
+    function ll2px(canvas, lat, lon) {
+        const lonSpan = 18 / mapState.zoom;
+        const latSpan = lonSpan * (canvas.height / canvas.width) /
+                        Math.cos(mapState.centerLat * Math.PI / 180);
+        const dx = (lon - mapState.centerLon) / lonSpan * canvas.width;
+        const dy = (mapState.centerLat - lat) / latSpan * canvas.height;
+        return [canvas.width/2 + dx, canvas.height/2 + dy];
+    }
+    function px2ll(canvas, px, py) {
+        const lonSpan = 18 / mapState.zoom;
+        const latSpan = lonSpan * (canvas.height / canvas.width) /
+                        Math.cos(mapState.centerLat * Math.PI / 180);
+        const lon = mapState.centerLon + (px - canvas.width/2) / canvas.width * lonSpan;
+        const lat = mapState.centerLat - (py - canvas.height/2) / canvas.height * latSpan;
+        return [lat, lon];
+    }
+    // Formato carta náutica: grados + minutos decimales (ej. 36°35.4'N 005°25.7'W)
+    function fmtLL(lat, lon) {
+        const ns = lat >= 0 ? 'N' : 'S', ew = lon >= 0 ? 'E' : 'W';
+        const aLat = Math.abs(lat), aLon = Math.abs(lon);
+        const latD = Math.floor(aLat);
+        const latM = (aLat - latD) * 60;
+        const lonD = Math.floor(aLon);
+        const lonM = (aLon - lonD) * 60;
+        const latStr = String(latD).padStart(2,'0') + '°' + latM.toFixed(2).padStart(5,'0') + "'" + ns;
+        const lonStr = String(lonD).padStart(3,'0') + '°' + lonM.toFixed(2).padStart(5,'0') + "'" + ew;
+        return latStr + '  ' + lonStr;
+    }
+
+    // === Datos de carta náutica realista ===
+    // Polígonos de batimetría (isobata 200 m - borde del talud continental)
+    const ISOBATH_200 = [
+        [-10.5,36.0],[-9.0,35.8],[-7.5,35.8],[-6.5,35.5],[-5.7,35.7],[-4.0,35.6],
+        [-2.5,35.7],[-1.0,36.0],[0.5,36.5],[2.0,37.5],[3.5,38.0],[4.5,39.0],
+        [4.0,40.5],[3.5,42.0],[3.0,42.3],[1.5,42.3],[-0.5,43.0],[-2.5,43.4],
+        [-7.0,43.5],[-9.5,43.0],[-10.5,40.0],[-10.5,36.0]
+    ];
+    // Sistema de Separación de Tráfico (TSS) del Estrecho de Gibraltar
+    // Eje aproximado E-W con dos vías y zona de separación central
+    const TSS_GIBRALTAR = {
+        lon0: -5.95, lat0: 35.95, lon1: -5.30, lat1: 36.10
+    };
+    // Faros principales del Mediterráneo occidental (con característica simplificada)
+    const LIGHTHOUSES = [
+        { name:'Cabo Espartel',    lat: 35.795, lon: -5.91,  ch:'Fl(4)20s'  },
+        { name:'I. Tarifa',        lat: 36.001, lon: -5.61,  ch:'Fl(3)10s'  },
+        { name:'Trafalgar',        lat: 36.18,  lon: -6.04,  ch:'Fl(3)15s'  },
+        { name:'Cabo de Gata',     lat: 36.72,  lon: -2.19,  ch:'Fl(3)10s'  },
+        { name:'Cabo de Palos',    lat: 37.63,  lon: -0.71,  ch:'Fl(2)10s'  },
+        { name:'Cabo La Nao',      lat: 38.73,  lon:  0.22,  ch:'Fl(5)20s'  },
+        { name:'C. Formentor',     lat: 39.96,  lon:  3.21,  ch:'Fl(4)20s'  },
+        { name:'P. Mola Mahón',    lat: 39.91,  lon:  4.33,  ch:'Fl(2)10s'  },
+        { name:'Cap de Creus',     lat: 42.32,  lon:  3.32,  ch:'Fl(2)10s'  },
+        { name:'Cap Béar',         lat: 42.51,  lon:  3.13,  ch:'Fl(3)15s'  },
+        { name:'C. Carbonara',     lat: 39.10,  lon:  9.62,  ch:'Fl(3)15s'  },
+        { name:'Capo Bon',         lat: 37.08,  lon: 11.04,  ch:'Fl(2)10s'  },
+        { name:'C. Espichel',      lat: 38.42,  lon: -9.21,  ch:'Fl 4s'     }
+    ];
+    // Áreas operativas y de prácticas (PRA)
+    const RESTRICTED_AREAS = [
+        // PRA Cartagena - Cabo de Palos (zona de ejercicios submarinos)
+        { name:'Z-1 PRA Cartagena',  type:'PRA',
+          coords:[[-1.0,37.6],[-0.4,37.6],[-0.4,37.0],[-1.0,37.0]] },
+        // PRA Cabo de Gata (área de ejercicios)
+        { name:'Z-2 PRA C. Gata',    type:'PRA',
+          coords:[[-2.5,36.4],[-1.5,36.4],[-1.5,35.8],[-2.5,35.8]] },
+        // EEZ española simplificada (información)
+        { name:'Aguas territoriales', type:'TER',
+          coords:[] }
+    ];
+
+    function drawMap() {
+        if (!mapState.visible) return;
+        const canvas = document.getElementById('map-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+
+        if (mapState.follow) {
+            mapState.centerLat = simSub.position.lat;
+            mapState.centerLon = simSub.position.lon;
+        }
+
+        // === CARTA NÁUTICA: AGUAS PROFUNDAS (FONDO BASE) ===
+        // Color azul suave estilo INT-1 nautical chart
+        ctx.fillStyle = '#9ec6dc';   // Mar abierto / aguas profundas (azul claro chart)
+        ctx.fillRect(0, 0, w, h);
+
+        // === BATIMETRÍA: SOMBREADO < 200 m (PLATAFORMA CONTINENTAL) ===
+        ctx.fillStyle = '#cfe5f0';   // Aguas someras estilo carta
+        ctx.beginPath();
+        ISOBATH_200.forEach(([lon, lat], i) => {
+            const [x, y] = ll2px(canvas, lat, lon);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.fill();
+
+        // Línea de isobata 200 m (talud continental)
+        ctx.strokeStyle = '#7a9ab0';
+        ctx.lineWidth = 0.8;
+        ctx.setLineDash([2, 3]);
+        ctx.beginPath();
+        ISOBATH_200.forEach(([lon, lat], i) => {
+            const [x, y] = ll2px(canvas, lat, lon);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Etiqueta isobata
+        const [iso200x, iso200y] = ll2px(canvas, 38.5, 2.5);
+        if (iso200x > 0 && iso200x < w) {
+            ctx.fillStyle = '#5a7a90';
+            ctx.font = 'italic 9px Consolas';
+            ctx.fillText('200 m', iso200x, iso200y);
+        }
+
+        // Cuadrícula lat/lon
+        const lonSpan = 18 / mapState.zoom;
+        const latSpan = lonSpan * (h / w) / Math.cos(mapState.centerLat * Math.PI / 180);
+        const gridStep = mapState.zoom >= 8 ? 0.25
+                       : mapState.zoom >= 4 ? 0.5
+                       : mapState.zoom >= 2 ? 1 : 2;
+        ctx.strokeStyle = '#1a3a5a';
+        ctx.lineWidth = 0.5;
+        ctx.fillStyle = '#3a6a8a';
+        ctx.font = '10px Consolas';
+        const lonMin = mapState.centerLon - lonSpan/2;
+        const lonMax = mapState.centerLon + lonSpan/2;
+        const latMin = mapState.centerLat - latSpan/2;
+        const latMax = mapState.centerLat + latSpan/2;
+        for (let lon = Math.ceil(lonMin/gridStep)*gridStep; lon <= lonMax; lon += gridStep) {
+            const [x] = ll2px(canvas, mapState.centerLat, lon);
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+            ctx.fillText((lon >= 0 ? '+' : '') + lon.toFixed(gridStep < 1 ? 1 : 0) + '°', x + 3, h - 5);
+        }
+        for (let lat = Math.ceil(latMin/gridStep)*gridStep; lat <= latMax; lat += gridStep) {
+            const [, y] = ll2px(canvas, lat, mapState.centerLon);
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+            ctx.fillText(lat.toFixed(gridStep < 1 ? 1 : 0) + '°', 5, y - 3);
+        }
+
+        // === COSTAS · TIERRA (color amarillento de carta náutica) ===
+        ctx.fillStyle = '#f0e5b6';     // Tierra - amarillo carta náutica
+        ctx.strokeStyle = '#8a6028';   // Borde costa - marrón
+        ctx.lineWidth = 1.5;
+        COASTLINES.forEach(coast => {
+            ctx.beginPath();
+            coast.coords.forEach(([lon, lat], i) => {
+                const [x, y] = ll2px(canvas, lat, lon);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.fill(); ctx.stroke();
+        });
+
+        // === ÁREAS RESTRINGIDAS / PRA (Practice / Restricted Areas) ===
+        RESTRICTED_AREAS.forEach(a => {
+            if (!a.coords || a.coords.length < 3) return;
+            ctx.fillStyle = 'rgba(220, 80, 80, 0.10)';
+            ctx.strokeStyle = '#cc4040';
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath();
+            a.coords.forEach(([lon, lat], i) => {
+                const [x, y] = ll2px(canvas, lat, lon);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            ctx.setLineDash([]);
+            // Etiqueta del área
+            const cLon = a.coords.reduce((s,p) => s+p[0], 0) / a.coords.length;
+            const cLat = a.coords.reduce((s,p) => s+p[1], 0) / a.coords.length;
+            const [tx, ty] = ll2px(canvas, cLat, cLon);
+            if (tx > 0 && tx < w && ty > 0 && ty < h) {
+                ctx.fillStyle = '#cc4040';
+                ctx.font = 'bold 9px Consolas';
+                ctx.fillText(a.name, tx - 25, ty);
+            }
+        });
+
+        // === SISTEMA DE SEPARACIÓN DE TRÁFICO (TSS) GIBRALTAR ===
+        const tss = TSS_GIBRALTAR;
+        const [t1x, t1y] = ll2px(canvas, tss.lat0, tss.lon0);
+        const [t2x, t2y] = ll2px(canvas, tss.lat1, tss.lon1);
+        if ((t1x > 0 || t2x > 0) && (t1x < w || t2x < w)) {
+            ctx.strokeStyle = '#a040c0';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([8, 4]);
+            // Vía oeste-este (norte)
+            ctx.beginPath();
+            ctx.moveTo(t1x, t1y - 4); ctx.lineTo(t2x, t2y - 4);
+            ctx.stroke();
+            // Vía este-oeste (sur)
+            ctx.beginPath();
+            ctx.moveTo(t1x, t1y + 4); ctx.lineTo(t2x, t2y + 4);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            // Flechas direccionales
+            ctx.fillStyle = '#a040c0';
+            ctx.font = '11px Consolas';
+            ctx.fillText('TSS Gibraltar →', (t1x + t2x)/2 - 30, t1y + 14);
+        }
+
+        // === SONDAS BATIMÉTRICAS · números en azul mostrando profundidad en metros ===
+        const SOUNDINGS = [
+            // Mediterráneo Occidental - profundidades aproximadas
+            [-5.2, 35.95, 850], [-3.5, 36.0, 1150], [-2.0, 36.4, 1850], [-0.5, 37.5, 2250],
+            [1.0, 38.5, 2400], [2.5, 39.5, 2680], [4.0, 40.0, 2640], [5.5, 39.0, 2710],
+            [7.0, 38.5, 2630], [9.0, 39.5, 2580], [10.5, 38.0, 1980],
+            [-7.0, 36.0, 220], [-1.5, 36.2, 320], [0.5, 37.8, 1450], [3.0, 38.0, 2200],
+            [6.0, 41.0, 1950], [8.5, 42.5, 1450], [10.0, 41.5, 1550],
+            [-2.5, 38.0, 1100], [-1.0, 38.5, 1850]
+        ];
+        if (mapState.zoom >= 0.8) {
+            ctx.fillStyle = '#5a8aa6';
+            ctx.font = 'italic 9px Consolas';
+            SOUNDINGS.forEach(([lon, lat, depth]) => {
+                const [x, y] = ll2px(canvas, lat, lon);
+                if (x < 10 || x > w-10 || y < 10 || y > h-10) return;
+                ctx.fillText(String(depth), x, y);
+            });
+        }
+
+        // === FAROS · símbolos estándar de carta (asterisco + característica) ===
+        LIGHTHOUSES.forEach(l => {
+            const [x, y] = ll2px(canvas, l.lat, l.lon);
+            if (x < -20 || x > w+20 || y < -20 || y > h+20) return;
+            // Asterisco rojo magenta (símbolo IALA de luz)
+            ctx.fillStyle = '#d040d0';
+            ctx.beginPath();
+            ctx.arc(x, y, 3.5, 0, Math.PI*2);
+            ctx.fill();
+            // Halo
+            ctx.strokeStyle = 'rgba(255, 100, 200, 0.6)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(x, y, 7, 0, Math.PI*2);
+            ctx.stroke();
+            // Característica luminosa solo a zoom alto
+            if (mapState.zoom >= 2) {
+                ctx.fillStyle = '#a040a0';
+                ctx.font = 'italic 9px Consolas';
+                ctx.fillText(l.ch, x + 8, y + 3);
+                if (mapState.zoom >= 3) {
+                    ctx.fillStyle = '#5a405a';
+                    ctx.font = '8px Consolas';
+                    ctx.fillText(l.name, x + 8, y - 5);
+                }
+            }
+        });
+
+        // === PUERTOS ===
+        PORTS.forEach(p => {
+            const [x, y] = ll2px(canvas, p.lat, p.lon);
+            if (x < -10 || x > w+10 || y < -10 || y > h+10) return;
+            if (p.base) {
+                ctx.fillStyle = '#ffd54a';
+                ctx.fillRect(x - 4, y - 4, 8, 8);
+                ctx.strokeStyle = '#ffd54a';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(x, y, 9, 0, Math.PI*2);
+                ctx.stroke();
+                ctx.font = 'bold 11px Consolas';
+                ctx.fillStyle = '#ffe680';
+                ctx.fillText(p.name, x + 12, y + 4);
+            } else {
+                ctx.fillStyle = '#88aacc';
+                ctx.fillRect(x - 2, y - 2, 4, 4);
+                ctx.font = '10px Consolas';
+                ctx.fillStyle = '#aaccdd';
+                ctx.fillText(p.name, x + 6, y + 4);
+            }
+        });
+
+        // Posición del submarino
+        const [sx, sy] = ll2px(canvas, simSub.position.lat, simSub.position.lon);
+
+        // Destino + ruta
+        if (mapState.destination) {
+            const [dx, dy] = ll2px(canvas, mapState.destination.lat, mapState.destination.lon);
+            ctx.strokeStyle = '#ffd54a';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([7, 5]);
+            ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(dx, dy); ctx.stroke();
+            ctx.setLineDash([]);
+            // Marcador (triángulo)
+            ctx.fillStyle = '#ffd54a';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(dx, dy - 11);
+            ctx.lineTo(dx + 9, dy + 6);
+            ctx.lineTo(dx - 9, dy + 6);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#0a0d18';
+            ctx.font = 'bold 11px Consolas';
+            ctx.textAlign = 'center';
+            ctx.fillText('D', dx, dy + 2);
+            ctx.textAlign = 'left';
+        }
+
+        // Anillos de detección sonar (40 nm pasivo, 15 nm activo)
+        if (sx > -200 && sx < w+200 && sy > -200 && sy < h+200) {
+            const rng40 = (40/60) / latSpan * h;
+            const rng15 = (15/60) / latSpan * h;
+            ctx.strokeStyle = 'rgba(80, 200, 120, 0.18)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 4]);
+            ctx.beginPath(); ctx.arc(sx, sy, rng40, 0, Math.PI*2); ctx.stroke();
+            ctx.strokeStyle = 'rgba(80, 200, 120, 0.30)';
+            ctx.beginPath(); ctx.arc(sx, sy, rng15, 0, Math.PI*2); ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // Contactos sonar (mercantes, submarinos, pesqueros, biológicos)
+        simSub.contacts.forEach(c => {
+            const bRad = c.bearing * Math.PI / 180;
+            const dlat = (c.range/60) * Math.cos(bRad);
+            const dlon = (c.range/60) * Math.sin(bRad) /
+                         Math.cos(simSub.position.lat * Math.PI / 180);
+            const [cx, cy] = ll2px(canvas, simSub.position.lat + dlat, simSub.position.lon + dlon);
+            if (cx < -15 || cx > w+15 || cy < -15 || cy > h+15) return;
+            const color = c.classification.includes('SUBM') ? '#ff4040'
+                        : c.classification.includes('MERC') ? '#ffaa00'
+                        : c.classification.includes('PESQ') ? '#aacccc'
+                        : c.classification.includes('BIOL') ? '#88dd88'
+                        : '#888';
+            // Vector de movimiento del contacto
+            const cBR = c.bearing * Math.PI / 180;
+            const vx = cx + Math.sin(cBR) * 12;
+            const vy = cy - Math.cos(cBR) * 12;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(vx, vy); ctx.stroke();
+            // Marker
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 5, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = c.confidence === 'HI' ? '#fff'
+                            : c.confidence === 'MID' ? '#aaa' : '#666';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.fillStyle = color;
+            ctx.font = 'bold 10px Consolas';
+            ctx.fillText(c.id, cx + 8, cy + 4);
+            ctx.fillStyle = '#aac';
+            ctx.font = '9px Consolas';
+            ctx.fillText(c.classification + '·' + c.speed.toFixed(0) + 'kn', cx + 8, cy + 14);
+        });
+
+        // S-81 (encima de los contactos)
+        if (sx > -50 && sx < w+50 && sy > -50 && sy < h+50) {
+            const canvasAng = (simSub.heading - 90) * Math.PI / 180;
+            const speedPx = Math.max(15, Math.abs(simSub.speed) * 3);
+            const hx = sx + Math.cos(canvasAng) * speedPx;
+            const hy = sy + Math.sin(canvasAng) * speedPx;
+            // Vector velocidad
+            ctx.strokeStyle = '#4fff80';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy); ctx.lineTo(hx, hy); ctx.stroke();
+            // Punta de flecha
+            ctx.fillStyle = '#4fff80';
+            ctx.beginPath();
+            ctx.moveTo(hx, hy);
+            ctx.lineTo(hx - Math.cos(canvasAng - 0.4) * 8, hy - Math.sin(canvasAng - 0.4) * 8);
+            ctx.lineTo(hx - Math.cos(canvasAng + 0.4) * 8, hy - Math.sin(canvasAng + 0.4) * 8);
+            ctx.closePath(); ctx.fill();
+            // Icono submarino (rombo orientado)
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(canvasAng);
+            ctx.fillStyle = '#4fff80';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(11, 0); ctx.lineTo(0, 5);
+            ctx.lineTo(-8, 0); ctx.lineTo(0, -5);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.restore();
+            // Etiqueta
+            ctx.fillStyle = '#4fff80';
+            ctx.font = 'bold 12px Consolas';
+            ctx.fillText('S-81', sx + 14, sy - 8);
+            ctx.font = '10px Consolas';
+            ctx.fillStyle = '#aacfbf';
+            ctx.fillText('Rb ' + String(Math.round(simSub.heading)).padStart(3,'0') +
+                         '° · ' + Math.abs(simSub.speed).toFixed(1) + 'kn · Pf ' +
+                         simSub.depth.toFixed(0) + 'm', sx + 14, sy + 6);
+        }
+
+        // Rosa de los vientos
+        ctx.save();
+        ctx.translate(w - 40, 40);
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -16); ctx.lineTo(6, 10); ctx.lineTo(0, 6); ctx.lineTo(-6, 10);
+        ctx.closePath(); ctx.fill();
+        ctx.font = 'bold 12px Consolas';
+        ctx.textAlign = 'center';
+        ctx.fillText('N', 0, 26);
+        ctx.textAlign = 'left';
+        ctx.restore();
+
+        // Barra de escala
+        const scaleNm = 60 * latSpan * 0.20;
+        const scaleStr = scaleNm > 100 ? Math.round(scaleNm) + ' nm'
+                       : scaleNm > 10  ? Math.round(scaleNm) + ' nm'
+                                       : scaleNm.toFixed(1) + ' nm';
+        ctx.strokeStyle = '#ddd'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(15, h - 18); ctx.lineTo(15 + h * 0.20, h - 18); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(15, h - 22); ctx.lineTo(15, h - 14);
+        ctx.moveTo(15 + h * 0.20, h - 22); ctx.lineTo(15 + h * 0.20, h - 14);
+        ctx.stroke();
+        ctx.fillStyle = '#ddd';
+        ctx.font = '10px Consolas';
+        ctx.fillText(scaleStr, 15, h - 25);
+
+        // Info textual
+        setT('map-center-info', fmtLL(mapState.centerLat, mapState.centerLon));
+        setT('map-pos-info',    fmtLL(simSub.position.lat, simSub.position.lon));
+        setT('map-zoom-info',   mapState.zoom.toFixed(1) + '×');
+        if (mapState.destination) {
+            setT('map-dest-info', fmtLL(mapState.destination.lat, mapState.destination.lon));
+            const dlat = mapState.destination.lat - simSub.position.lat;
+            const dlon = (mapState.destination.lon - simSub.position.lon) *
+                         Math.cos(simSub.position.lat * Math.PI / 180);
+            const dnm = Math.sqrt(dlat*dlat + dlon*dlon) * 60;
+            const brg = (Math.atan2(dlon, dlat) * 180 / Math.PI + 360) % 360;
+            setT('map-dist-info', dnm.toFixed(1) + ' nm @ ' +
+                                  String(Math.round(brg)).padStart(3,'0') + '°');
+            const spd = Math.abs(simSub.speed);
+            const eta = spd > 0.5 ? (dnm / spd).toFixed(1) + ' h' : '—';
+            setT('map-eta-info', eta);
+        } else {
+            setT('map-dest-info', '—');
+            setT('map-dist-info', '—');
+            setT('map-eta-info', '—');
+        }
+    }
+
+    // ===================== TOMA DE CONTROL DE TRIPULANTES =====================
+    const physics = {
+        enabled: false,
+        velocityY: 0,
+        GRAVITY: -9.8,
+        JUMP_VEL: 4.0,
+        EYE_STAND: 1.65,
+        EYE_SIT:   0.95,
+        walkSpeed: 2.8,
+        runSpeed:  4.5
+    };
+    let controlledCrew = null;
+    const crewModalState = { visible: false };
+
+    function setupCrewModal() {
+        // Generar grid de tarjetas
+        const content = document.getElementById('crew-roster-content');
+        const sections = [
+            { title: 'Cuerpo de Oficiales', filter: c => RANKS[c.rank].cat === 'officer' },
+            { title: 'Cuerpo de Suboficiales', filter: c => RANKS[c.rank].cat === 'nco' },
+            { title: 'Marinería y Tropa', filter: c => RANKS[c.rank].cat === 'seaman' }
+        ];
+        let html = '';
+        sections.forEach(s => {
+            const list = CREW.filter(s.filter);
+            html += '<div class="crew-section-title">' + s.title + ' (' + list.length + ')</div>';
+            html += '<div id="crew-roster-grid">';
+            list.forEach(c => {
+                const r = RANKS[c.rank];
+                const compName = COMPARTMENTS[c.comp] ? COMPARTMENTS[c.comp].name : '—';
+                html += '<div class="crew-card ' + r.cat + '" data-id="' + c.id + '">' +
+                    '<img class="crew-avatar" src="' + c.avatar + '" alt="' + c.id + '">' +
+                    '<div class="crew-rank">' + c.rank + ' · ' + r.full + '</div>' +
+                    '<div class="crew-name">' + c.name + '</div>' +
+                    '<div class="crew-fn">' + c.fn + '</div>' +
+                    '<div class="crew-comp">📍 ' + compName + '</div>' +
+                '</div>';
+            });
+            html += '</div>';
+        });
+        content.innerHTML = html;
+
+        content.querySelectorAll('.crew-card').forEach(card => {
+            card.addEventListener('click', () => {
+                takeControl(card.dataset.id);
+            });
+        });
+
+        document.getElementById('crew-modal-close').addEventListener('click', toggleCrewModal);
+        document.getElementById('crewToggleBtn').addEventListener('click', toggleCrewModal);
+        document.getElementById('control-release').addEventListener('click', releaseControl);
+        document.getElementById('physicsBtn').addEventListener('click', () => {
+            setPhysicsMode(!physics.enabled);
+        });
+    }
+
+    function toggleCrewModal() {
+        crewModalState.visible = !crewModalState.visible;
+        document.getElementById('crew-modal').classList.toggle('visible', crewModalState.visible);
+    }
+
+    function takeControl(crewId) {
+        const c = CREW.find(x => x.id === crewId);
+        if (!c) return;
+        // Liberar control anterior si lo había
+        if (controlledCrew) {
+            if (controlledCrew.mesh) controlledCrew.mesh.visible = true;
+            document.querySelectorAll('.crew-card').forEach(cd =>
+                cd.classList.toggle('controlled', cd.dataset.id === crewId));
+        }
+        controlledCrew = c;
+
+        // Calcular altura de los ojos según pose
+        const eyeY = (c.pose === 'sitting') ? FLOOR_Y + physics.EYE_SIT : FLOOR_Y + physics.EYE_STAND;
+        player.position.set(c.pos[0], eyeY, c.pos[1]);
+        yaw = c.rot;
+        pitch = 0;
+        player.rotation.y = yaw;
+        camera.rotation.x = pitch;
+
+        // Activar modo física
+        setPhysicsMode(true);
+
+        // Ocultar la figura 3D del tripulante (el jugador es ese tripulante ahora)
+        if (c.mesh) c.mesh.visible = false;
+
+        // Mostrar banner
+        const banner = document.getElementById('control-banner');
+        banner.classList.add('active');
+        document.getElementById('control-avatar').src = c.avatar;
+        document.getElementById('control-name').textContent = c.name;
+        document.getElementById('control-rank').textContent = c.rank;
+        document.getElementById('control-fn').textContent = c.fn + ' · ' +
+            (COMPARTMENTS[c.comp] ? COMPARTMENTS[c.comp].name : '');
+
+        // Cerrar modal
+        if (crewModalState.visible) toggleCrewModal();
+
+        addLog('🎮 Control: ' + c.rank + ' ' + c.name + ' · ' + c.fn);
+    }
+
+    function releaseControl() {
+        if (!controlledCrew) return;
+        if (controlledCrew.mesh) controlledCrew.mesh.visible = true;
+        document.getElementById('control-banner').classList.remove('active');
+        document.querySelectorAll('.crew-card.controlled').forEach(cd =>
+            cd.classList.remove('controlled'));
+        addLog('Control liberado: ' + controlledCrew.name);
+        controlledCrew = null;
+        setPhysicsMode(false);
+    }
+
+    function setPhysicsMode(on) {
+        physics.enabled = on;
+        physics.velocityY = 0;
+        document.getElementById('physicsBtn').textContent =
+            '🏃 Modo Física: ' + (on ? 'ON' : 'OFF');
+        document.getElementById('physicsBtn').classList.toggle('active', on);
+        if (on) addLog('Física activada · gravedad + colisión suelo');
+        else    addLog('Física desactivada · vuelo libre');
+    }
+
+    function isInsideHull(x, y, z) {
+        if (Math.abs(x) > HALF_L - 0.5) return false;
+        const r2 = z*z + (y - 0)*(y - 0) * 0.6; // hull algo achatado
+        if (r2 > (HULL_RADIUS - 0.3) * (HULL_RADIUS - 0.3)) return false;
+        return true;
+    }
+
+    function setupMap() {
+        const canvas = document.getElementById('map-canvas');
+        if (!canvas) return;
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const factor = e.deltaY < 0 ? 1.4 : 1/1.4;
+            mapState.zoom = Math.max(0.4, Math.min(64, mapState.zoom * factor));
+            drawMap();
+        }, { passive: false });
+
+        canvas.addEventListener('mousedown', (e) => {
+            mapState.panning = true;
+            mapState.follow = false;
+            mapState.lastX = e.offsetX; mapState.lastY = e.offsetY;
+        });
+        canvas.addEventListener('mousemove', (e) => {
+            if (!mapState.panning) return;
+            const dx = e.offsetX - mapState.lastX;
+            const dy = e.offsetY - mapState.lastY;
+            mapState.lastX = e.offsetX; mapState.lastY = e.offsetY;
+            const lonSpan = 18 / mapState.zoom;
+            const latSpan = lonSpan * (canvas.height / canvas.width) /
+                            Math.cos(mapState.centerLat * Math.PI / 180);
+            mapState.centerLon -= dx / canvas.width * lonSpan;
+            mapState.centerLat += dy / canvas.height * latSpan;
+            drawMap();
+        });
+        canvas.addEventListener('mouseup',    () => { mapState.panning = false; });
+        canvas.addEventListener('mouseleave', () => { mapState.panning = false; });
+
+        canvas.addEventListener('dblclick', (e) => {
+            const [lat, lon] = px2ll(canvas, e.offsetX, e.offsetY);
+            mapState.destination = { lat, lon };
+            drawMap();
+            addLog('🎯 Destino fijado: ' + fmtLL(lat, lon));
+        });
+
+        document.getElementById('map-zoom-in').addEventListener('click', () => {
+            mapState.zoom = Math.min(64, mapState.zoom * 1.4); drawMap();
+        });
+        document.getElementById('map-zoom-out').addEventListener('click', () => {
+            mapState.zoom = Math.max(0.4, mapState.zoom / 1.4); drawMap();
+        });
+        document.getElementById('map-recenter').addEventListener('click', () => {
+            mapState.follow = true;
+            mapState.centerLat = simSub.position.lat;
+            mapState.centerLon = simSub.position.lon;
+            drawMap();
+        });
+        document.getElementById('map-clear-dest').addEventListener('click', () => {
+            mapState.destination = null;
+            mapState.autoPilot = false;
+            updateAutopilotBtn();
+            drawMap();
+            addLog('Destino borrado');
+        });
+        document.getElementById('map-autopilot').addEventListener('click', () => {
+            if (!mapState.destination) {
+                addLog('⚠ Fija primero un destino (doble click en el mapa)', true);
+                return;
+            }
+            mapState.autoPilot = !mapState.autoPilot;
+            updateAutopilotBtn();
+            addLog('🤖 Auto-pilot ' + (mapState.autoPilot ? 'ACTIVADO' : 'DESACTIVADO'));
+        });
+        document.getElementById('map-modal-close').addEventListener('click', toggleMap);
+        document.getElementById('mapToggleBtn').addEventListener('click', toggleMap);
+    }
+
+    function updateAutopilotBtn() {
+        const b = document.getElementById('map-autopilot');
+        b.textContent = '🤖 Auto-pilot: ' + (mapState.autoPilot ? 'ON' : 'OFF');
+        b.classList.toggle('active', mapState.autoPilot);
+    }
+
+    function toggleMap() {
+        mapState.visible = !mapState.visible;
+        document.getElementById('map-modal').classList.toggle('visible', mapState.visible);
+        if (mapState.visible) drawMap();
+    }
+
+    // Lógica del auto-pilot: corrige timón hacia el destino
+    function autopilotTick() {
+        if (!mapState.autoPilot || !mapState.destination) return;
+        const dlat = mapState.destination.lat - simSub.position.lat;
+        const dlon = (mapState.destination.lon - simSub.position.lon) *
+                     Math.cos(simSub.position.lat * Math.PI / 180);
+        const distNm = Math.sqrt(dlat*dlat + dlon*dlon) * 60;
+        if (distNm < 0.5) {
+            mapState.destination = null;
+            mapState.autoPilot = false;
+            updateAutopilotBtn();
+            simSub.rudder.ordered = 0;
+            simSub.throttle = 'stop';
+            document.querySelectorAll('.eot-btn').forEach(b =>
+                b.classList.toggle('active', b.dataset.throttle === 'stop'));
+            addLog('🎯 Destino alcanzado · EOT a PARO');
+            return;
+        }
+        const targetBearing = (Math.atan2(dlon, dlat) * 180 / Math.PI + 360) % 360;
+        const err = ((targetBearing - simSub.heading + 540) % 360) - 180;
+        // P-controller en el timón ordenado
+        simSub.rudder.ordered = Math.max(-35, Math.min(35, err * 1.5));
+    }
+
+    // ===================== TRIPULACIÓN · DIVISAS ARMADA =====================
+    // Empleos según anexo de divisas de la Armada Española
+    // (es.wikipedia.org/wiki/Anexo:Divisas_de_los_cuerpos_de_la_Armada_Española)
+    // stripes = nº de galones dorados (palas oficiales)
+    // chevrons = nº de cabos invertidos (suboficiales) o cabos rectos (marinería)
+    const RANKS = {
+        // Oficiales generales
+        'AG':  { full: 'Almirante General',     cat: 'officer', stripes: 5,   color: 0xffd54a },
+        'ALM': { full: 'Almirante',             cat: 'officer', stripes: 4.5, color: 0xffd54a },
+        'VA':  { full: 'Vicealmirante',         cat: 'officer', stripes: 4,   color: 0xffd54a },
+        'CA':  { full: 'Contralmirante',        cat: 'officer', stripes: 3.5, color: 0xffd54a },
+        // Oficiales
+        'CN':  { full: 'Capitán de Navío',      cat: 'officer', stripes: 4,   color: 0xffd54a },
+        'CF':  { full: 'Capitán de Fragata',    cat: 'officer', stripes: 3,   color: 0xffd54a },
+        'CC':  { full: 'Capitán de Corbeta',    cat: 'officer', stripes: 2.5, color: 0xffd54a },
+        'TN':  { full: 'Teniente de Navío',     cat: 'officer', stripes: 2,   color: 0xffd54a },
+        'AN':  { full: 'Alférez de Navío',      cat: 'officer', stripes: 1.5, color: 0xffd54a },
+        'AF':  { full: 'Alférez de Fragata',    cat: 'officer', stripes: 1,   color: 0xffd54a },
+        // Suboficiales
+        'SBM': { full: 'Suboficial Mayor',      cat: 'nco',     chevrons: 5,  color: 0xddccaa },
+        'SBT': { full: 'Subteniente',           cat: 'nco',     chevrons: 4,  color: 0xddccaa },
+        'BG':  { full: 'Brigada',               cat: 'nco',     chevrons: 3,  color: 0xddccaa },
+        'SP':  { full: 'Sargento Primero',      cat: 'nco',     chevrons: 2,  color: 0xc8c0a8 },
+        'SG':  { full: 'Sargento',              cat: 'nco',     chevrons: 1,  color: 0xc8c0a8 },
+        // Marinería y Tropa
+        'CBM': { full: 'Cabo Mayor',            cat: 'seaman',  chevrons: 4,  color: 0xc04020 },
+        'CB1': { full: 'Cabo Primero',          cat: 'seaman',  chevrons: 3,  color: 0xc04020 },
+        'CB':  { full: 'Cabo',                  cat: 'seaman',  chevrons: 2,  color: 0xc04020 },
+        'MR':  { full: 'Marinero',              cat: 'seaman',  chevrons: 0,  color: 0x88aacc }
+    };
+
+    // Dotación del S-81 - 19 efectivos modelados (de los 40 según ficha Armada)
+    // Empleos típicos en submarinos clase S-80 (no oficiales individualmente, plausibles)
+    const CREW = [
+        // === OFICIALES (8) ===
+        { id:'C01', rank:'CF',  name:'D. Antonio Romero Martín',   fn:'Comandante',                  comp:3, pos:[11.5, 0.6], rot:-Math.PI/2, pose:'standing', label:'CMTE' },
+        { id:'C02', rank:'CC',  name:'D. Carlos Vega López',        fn:'Segundo Comandante',           comp:4, pos:[23.5, 2.3], rot: 0,         pose:'sitting'  },
+        { id:'C03', rank:'TN',  name:'D. Manuel García Pérez',     fn:'Oficial de Operaciones',       comp:3, pos:[15,  -1.7], rot: Math.PI,   pose:'sitting'  },
+        { id:'C04', rank:'TN',  name:'D. Javier Ruiz Hernández',   fn:'Oficial de Armas / TASW',      comp:5, pos:[36,   1.2], rot:-Math.PI/2, pose:'standing' },
+        { id:'C05', rank:'AN',  name:'D. Roberto Díaz Castro',     fn:'Oficial de Derrota',           comp:3, pos:[11.5, 2.3], rot:-Math.PI/2, pose:'standing' },
+        { id:'C06', rank:'AN',  name:'D. Fernando López Moreno',   fn:'Oficial Ingeniero',            comp:1, pos:[-21, -2.2], rot: 0,         pose:'standing' },
+        { id:'C07', rank:'AN',  name:'D. Luis Sánchez Ortiz',      fn:'Oficial de Sistemas (CIS)',    comp:3, pos:[ 8.7,-1.7], rot: Math.PI,   pose:'sitting'  },
+        { id:'C08', rank:'AF',  name:'D. Ricardo Torres Vega',     fn:'Oficial Subalterno',           comp:1, pos:[-14,  2.5], rot: Math.PI,   pose:'standing' },
+        // === SUBOFICIALES (8) ===
+        { id:'C09', rank:'SBT', name:'D. Pedro Sánchez Díaz',      fn:'Suboficial Mayor de Buque',    comp:3, pos:[ 6.5, 1.7], rot: 0,         pose:'sitting'  },
+        { id:'C10', rank:'BG',  name:'D. José Martínez Ruiz',      fn:'Timonel',                       comp:3, pos:[16.3, 0],   rot:-Math.PI/2, pose:'sitting'  },
+        { id:'C11', rank:'BG',  name:'D. Andrés Ramos Vargas',     fn:'Mecánico Mayor',                comp:0, pos:[-34,-1.6], rot: Math.PI/2, pose:'standing' },
+        { id:'C12', rank:'SP',  name:'D. Antonio Jiménez Soto',    fn:'Operador Sonar Pasivo',        comp:3, pos:[ 8.7, 1.7], rot: 0,         pose:'sitting'  },
+        { id:'C13', rank:'SP',  name:'D. Daniel Romero Castillo',   fn:'Operador Sonar Activo',        comp:3, pos:[10.9, 1.7], rot: 0,         pose:'sitting'  },
+        { id:'C14', rank:'SG',  name:'D. Rafael Méndez Cruz',      fn:'Operador EW / ESM',             comp:3, pos:[13.1, 1.7], rot: 0,         pose:'sitting'  },
+        { id:'C15', rank:'SG',  name:'D. Miguel Pérez Aguilar',    fn:'Operador Comunicaciones',      comp:3, pos:[15.3, 1.7], rot: 0,         pose:'sitting'  },
+        { id:'C16', rank:'SG',  name:'D. Francisco Gómez Reyes',   fn:'Operador AIP',                  comp:1, pos:[-17, -1.6], rot: 0,         pose:'standing' },
+        // === MARINERÍA (3) ===
+        { id:'C17', rank:'CB1', name:'M. Diego Navarro Lara',      fn:'Cabo Cocinero',                 comp:2, pos:[-7.5, 1.4], rot: Math.PI,   pose:'standing' },
+        { id:'C18', rank:'CB',  name:'M. Alberto Soto Ferrer',     fn:'Cabo de Guardia',               comp:2, pos:[-1.5, 1.6], rot: 0,         pose:'sitting'  },
+        { id:'C19', rank:'MR',  name:'M. Sergio Vázquez Ortega',    fn:'Marinero Operativo Armas',      comp:5, pos:[30, -1.0], rot: Math.PI/2, pose:'standing' }
+    ];
+
+    // === Generador de avatar procedural (canvas → data URL) ===
+    function hashStr(s) {
+        let h = 5381;
+        for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+        return Math.abs(h);
+    }
+
+    function createAvatar(crew) {
+        const c = document.createElement('canvas');
+        c.width = 96; c.height = 96;
+        const ctx = c.getContext('2d');
+        const r = RANKS[crew.rank];
+        const seed = hashStr(crew.id);
+
+        // Fondo (degradado militar)
+        const bg = ctx.createLinearGradient(0, 0, 0, 96);
+        if (r.cat === 'officer')      { bg.addColorStop(0, '#1a3052'); bg.addColorStop(1, '#091a30'); }
+        else if (r.cat === 'nco')      { bg.addColorStop(0, '#244068'); bg.addColorStop(1, '#0a1a30'); }
+        else                            { bg.addColorStop(0, '#2a3850'); bg.addColorStop(1, '#0a1424'); }
+        ctx.fillStyle = bg; ctx.fillRect(0, 0, 96, 96);
+
+        // Galón / palas decorativas en marco
+        const ringColor = r.cat === 'officer' ? '#ffd54a'
+                       : r.cat === 'nco'      ? '#d8c8a4'
+                                              : '#4a90c0';
+        ctx.strokeStyle = ringColor;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(2, 2, 92, 92);
+
+        // Tono de piel variable
+        const skin = `hsl(${28 + (seed % 12)}, ${50 - (seed % 15)}%, ${68 - (seed % 12)}%)`;
+
+        // Cara
+        ctx.fillStyle = skin;
+        ctx.beginPath();
+        ctx.ellipse(48, 50, 19, 25, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // Pelo (color variable)
+        const hairColors = ['#1a0a04', '#2a1a0a', '#3a2a14', '#4a3a24', '#604838'];
+        ctx.fillStyle = hairColors[seed % hairColors.length];
+        ctx.beginPath();
+        ctx.ellipse(48, 30, 21, 14, 0, Math.PI, Math.PI*2);
+        ctx.fill();
+
+        // Gorra (oficiales y suboficiales)
+        if (r.cat !== 'seaman' || crew.rank === 'CBM' || crew.rank === 'CB1' || crew.rank === 'CB') {
+            // Banda de la gorra
+            ctx.fillStyle = '#0a0d20';
+            ctx.fillRect(24, 18, 48, 11);
+            // Plato superior
+            ctx.fillStyle = '#0e1124';
+            ctx.beginPath();
+            ctx.ellipse(48, 18, 24, 5, 0, 0, Math.PI*2);
+            ctx.fill();
+            // Visera
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.ellipse(48, 30, 26, 5, 0, 0, Math.PI);
+            ctx.fill();
+            // Galón en visera (oficiales superiores)
+            if (r.cat === 'officer' && r.stripes >= 3) {
+                ctx.fillStyle = ringColor;
+                ctx.fillRect(28, 28, 40, 1.5);
+                if (r.stripes >= 4) ctx.fillRect(28, 30.5, 40, 1);
+            }
+            // Emblema (ancla dorada)
+            ctx.fillStyle = ringColor;
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('⚓', 48, 27);
+        } else {
+            // Marinero: sin gorra de plato (cabeza al aire)
+        }
+
+        // Ojos
+        ctx.fillStyle = '#0a0a0a';
+        ctx.beginPath(); ctx.arc(40, 47, 1.7, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(56, 47, 1.7, 0, Math.PI*2); ctx.fill();
+        // Cejas
+        ctx.strokeStyle = hairColors[seed % hairColors.length];
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(36, 43); ctx.lineTo(44, 43);
+        ctx.moveTo(52, 43); ctx.lineTo(60, 43);
+        ctx.stroke();
+        // Nariz
+        ctx.strokeStyle = `hsl(${28 + (seed % 12)}, 40%, 50%)`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(48, 50); ctx.lineTo(46, 58); ctx.lineTo(50, 58); ctx.stroke();
+        // Boca
+        ctx.strokeStyle = '#5a3020';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(43, 64); ctx.quadraticCurveTo(48, (seed % 3 ? 67 : 63), 53, 64);
+        ctx.stroke();
+
+        // Barba/bigote (algunos)
+        if (seed % 4 === 0) {
+            ctx.fillStyle = hairColors[seed % hairColors.length];
+            ctx.fillRect(43, 60, 10, 1.5);
+        }
+
+        // Cuello uniforme
+        const uniformColor = r.cat === 'officer' ? '#0a142a'
+                           : r.cat === 'nco'     ? '#142848'
+                                                 : '#1a2a40';
+        ctx.fillStyle = uniformColor;
+        ctx.beginPath();
+        ctx.moveTo(20, 96);
+        ctx.lineTo(20, 80);
+        ctx.lineTo(36, 74);
+        ctx.lineTo(48, 80);
+        ctx.lineTo(60, 74);
+        ctx.lineTo(76, 80);
+        ctx.lineTo(76, 96);
+        ctx.closePath();
+        ctx.fill();
+        // Corbata (oficiales)
+        if (r.cat === 'officer') {
+            ctx.fillStyle = '#0a0a14';
+            ctx.beginPath();
+            ctx.moveTo(46, 78); ctx.lineTo(50, 78); ctx.lineTo(52, 96); ctx.lineTo(44, 96);
+            ctx.closePath(); ctx.fill();
+        }
+        // Camisa blanca debajo
+        ctx.fillStyle = '#f0f0e8';
+        ctx.beginPath();
+        ctx.moveTo(40, 78); ctx.lineTo(48, 84); ctx.lineTo(56, 78);
+        ctx.lineTo(56, 96); ctx.lineTo(40, 96); ctx.closePath();
+        ctx.fill();
+        if (r.cat === 'officer') {
+            ctx.fillStyle = '#0a0a14';
+            ctx.beginPath();
+            ctx.moveTo(46, 84); ctx.lineTo(50, 84); ctx.lineTo(50, 96); ctx.lineTo(46, 96);
+            ctx.closePath(); ctx.fill();
+        }
+
+        // === DIVISAS en la pala (esquina inferior derecha) ===
+        // Mini "pala" representando los galones del rango
+        ctx.fillStyle = '#0a0d20';
+        ctx.fillRect(73, 60, 18, 22);
+        ctx.strokeStyle = ringColor;
+        ctx.lineWidth = 0.8;
+        ctx.strokeRect(73, 60, 18, 22);
+        if (r.cat === 'officer') {
+            // Galones dorados horizontales
+            const stripes = Math.floor(r.stripes);
+            const half = (r.stripes % 1) > 0;
+            ctx.fillStyle = '#ffd54a';
+            for (let i = 0; i < stripes; i++) {
+                ctx.fillRect(75, 79 - i*4, 14, 2.2);
+            }
+            if (half) ctx.fillRect(75, 79 - stripes*4, 14, 1.1);
+        } else if (r.cat === 'nco') {
+            // Cabos invertidos (en V) cromados
+            ctx.strokeStyle = ringColor;
+            ctx.lineWidth = 1.6;
+            for (let i = 0; i < r.chevrons; i++) {
+                const y = 78 - i*3.5;
+                ctx.beginPath();
+                ctx.moveTo(75, y); ctx.lineTo(82, y - 4); ctx.lineTo(89, y);
+                ctx.stroke();
+            }
+        } else if (r.chevrons > 0) {
+            // Cabos rectos (rojos) para Cabos
+            ctx.strokeStyle = '#c04020';
+            ctx.lineWidth = 1.6;
+            for (let i = 0; i < r.chevrons; i++) {
+                const y = 78 - i*3.5;
+                ctx.beginPath();
+                ctx.moveTo(75, y); ctx.lineTo(82, y - 4); ctx.lineTo(89, y);
+                ctx.stroke();
+            }
+        }
+
+        // ID en la esquina superior izquierda
+        ctx.fillStyle = '#ffd54a';
+        ctx.font = 'bold 9px Consolas';
+        ctx.textAlign = 'left';
+        ctx.fillText(crew.id, 4, 12);
+
+        return c.toDataURL('image/png');
+    }
+
+    // Crea un miembro de la tripulación con uniforme según rango y pose
+    function createCrewMember(parent, x, y, z, opts = {}) {
+        const g = new THREE.Group();
+        g.position.set(x, y, z);
+        if (opts.rotY !== undefined) g.rotation.y = opts.rotY;
+
+        // Uniforme: oficial = azul muy oscuro, suboficial = azul medio, marinería = azul-gris
+        const uniform = opts.rank === 'officer' ? 0x0a1428
+                      : opts.rank === 'nco'     ? 0x142848
+                                                : 0x1a2a40;
+        const skin    = 0xddc8a8;
+        const hatColor= opts.rank === 'officer' ? 0x000810 : 0x0a0d20;
+        const matU = new THREE.MeshPhongMaterial({ color: uniform });
+        const matS = new THREE.MeshPhongMaterial({ color: skin });
+        const matD = new THREE.MeshPhongMaterial({ color: 0x080a18 });
+        const matH = new THREE.MeshPhongMaterial({ color: hatColor });
+
+        const sitting = (opts.pose === 'sitting');
+
+        // Torso
+        const torso = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.22, 0.26, sitting ? 0.55 : 0.7, 10),
+            matU
+        );
+        torso.position.y = sitting ? 0.55 : 0.95;
+        g.add(torso);
+
+        // Cuello
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.07, 8), matS);
+        neck.position.y = sitting ? 0.86 : 1.32;
+        g.add(neck);
+
+        // Cabeza
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 10), matS);
+        head.position.y = sitting ? 0.99 : 1.45;
+        g.add(head);
+
+        // Pelo / parte trasera de la cabeza ligeramente más oscura
+        const hair = new THREE.Mesh(
+            new THREE.SphereGeometry(0.135, 12, 8, 0, Math.PI*2, 0, Math.PI/2.4),
+            new THREE.MeshPhongMaterial({ color: 0x1a1208 })
+        );
+        hair.position.y = sitting ? 1.02 : 1.48;
+        g.add(hair);
+
+        // Gorra (suboficial/oficial)
+        if (opts.hat !== false) {
+            const hat = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.14, 0.14, 0.05, 12),
+                matH
+            );
+            hat.position.y = sitting ? 1.08 : 1.54;
+            g.add(hat);
+            // Visera
+            const visor = new THREE.Mesh(
+                new THREE.BoxGeometry(0.28, 0.02, 0.1),
+                matH
+            );
+            visor.position.set(0, sitting ? 1.07 : 1.53, 0.13);
+            g.add(visor);
+        }
+
+        // Brazos
+        const armGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.55, 6);
+        const armL = new THREE.Mesh(armGeo, matU);
+        const armR = new THREE.Mesh(armGeo, matU);
+        if (sitting) {
+            // Brazos extendidos hacia adelante (sobre consola)
+            armL.position.set(0.20, 0.65, 0.20);
+            armL.rotation.x = -Math.PI/2.4;
+            armR.position.set(-0.20, 0.65, 0.20);
+            armR.rotation.x = -Math.PI/2.4;
+        } else {
+            armL.position.set(0.30, 1.0, 0);
+            armR.position.set(-0.30, 1.0, 0);
+        }
+        g.add(armL); g.add(armR);
+
+        // Manos
+        const handGeo = new THREE.SphereGeometry(0.07, 8, 6);
+        const handL = new THREE.Mesh(handGeo, matS);
+        const handR = new THREE.Mesh(handGeo, matS);
+        if (sitting) {
+            handL.position.set(0.20, 0.45, 0.45);
+            handR.position.set(-0.20, 0.45, 0.45);
+        } else {
+            handL.position.set(0.30, 0.7, 0);
+            handR.position.set(-0.30, 0.7, 0);
+        }
+        g.add(handL); g.add(handR);
+
+        // Piernas
+        const legGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.6, 6);
+        const legL = new THREE.Mesh(legGeo, matD);
+        const legR = new THREE.Mesh(legGeo, matD);
+        if (sitting) {
+            // Piernas dobladas hacia adelante (rodillas a 90°)
+            legL.position.set(0.11, 0.30, 0.30);
+            legL.rotation.x = -Math.PI/2;
+            legR.position.set(-0.11, 0.30, 0.30);
+            legR.rotation.x = -Math.PI/2;
+            // Espinillas hacia abajo
+            const shinL = new THREE.Mesh(legGeo, matD);
+            shinL.position.set(0.11, 0.0, 0.55);
+            const shinR = new THREE.Mesh(legGeo, matD);
+            shinR.position.set(-0.11, 0.0, 0.55);
+            g.add(shinL); g.add(shinR);
+        } else {
+            legL.position.set(0.11, 0.32, 0);
+            legR.position.set(-0.11, 0.32, 0);
+        }
+        g.add(legL); g.add(legR);
+
+        // ===== DIVISAS / GALONES VISIBLES EN EL UNIFORME 3D =====
+        // Palas (shoulder boards) sobre los hombros para oficiales
+        const rankInfo = opts.rankInfo;
+        if (rankInfo && rankInfo.cat === 'officer') {
+            const palaColor = 0x0a0d20;
+            const stripeColor = 0xffd54a;
+            const stripes = Math.floor(rankInfo.stripes);
+            const halfStripe = (rankInfo.stripes % 1) > 0;
+            // Pala izquierda
+            const palaL = new THREE.Mesh(
+                new THREE.BoxGeometry(0.18, 0.025, 0.10),
+                new THREE.MeshPhongMaterial({ color: palaColor })
+            );
+            palaL.position.set(0.18, sitting ? 0.84 : 1.30, 0);
+            g.add(palaL);
+            const palaR = palaL.clone();
+            palaR.position.x = -0.18;
+            g.add(palaR);
+            // Galones dorados encima de cada pala
+            const stripeMat = new THREE.MeshPhongMaterial({
+                color: stripeColor, emissive: 0x553300, shininess: 100
+            });
+            for (let i = 0; i < stripes; i++) {
+                const offY = i * 0.025;
+                const stripeL = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.05, 0.005, 0.10),
+                    stripeMat
+                );
+                stripeL.position.set(0.16 + i * 0.018, sitting ? 0.855 : 1.315, 0);
+                g.add(stripeL);
+                const stripeR = stripeL.clone();
+                stripeR.position.x = -(0.16 + i * 0.018);
+                g.add(stripeR);
+            }
+            if (halfStripe) {
+                const thinL = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.025, 0.004, 0.10),
+                    stripeMat
+                );
+                thinL.position.set(0.16 + stripes * 0.018, sitting ? 0.855 : 1.315, 0);
+                g.add(thinL);
+                const thinR = thinL.clone();
+                thinR.position.x = -(0.16 + stripes * 0.018);
+                g.add(thinR);
+            }
+            // Galones en la visera de la gorra (oficiales superiores)
+            if (rankInfo.stripes >= 3 && opts.hat !== false) {
+                const visorBraid = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.30, 0.005, 0.005),
+                    stripeMat
+                );
+                visorBraid.position.set(0, sitting ? 1.06 : 1.52, 0.135);
+                g.add(visorBraid);
+            }
+        }
+
+        // Cabos invertidos (chevrons) para suboficiales en el brazo izquierdo
+        if (rankInfo && rankInfo.cat === 'nco') {
+            const chevronMat = new THREE.MeshPhongMaterial({
+                color: 0xddccaa, shininess: 80
+            });
+            for (let i = 0; i < rankInfo.chevrons; i++) {
+                const cv = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.10, 0.018, 0.018),
+                    chevronMat
+                );
+                if (sitting) {
+                    cv.position.set(0.20, 0.62 - i*0.04, 0.30);
+                    cv.rotation.y = -Math.PI/4;
+                } else {
+                    cv.position.set(0.31, 1.12 - i*0.04, 0);
+                }
+                g.add(cv);
+            }
+        }
+
+        // Cabos rectos (rojos para marinería)
+        if (rankInfo && rankInfo.cat === 'seaman' && rankInfo.chevrons > 0) {
+            const chevronMat = new THREE.MeshPhongMaterial({ color: 0xc04020 });
+            for (let i = 0; i < rankInfo.chevrons; i++) {
+                const cv = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.10, 0.018, 0.018),
+                    chevronMat
+                );
+                if (sitting) {
+                    cv.position.set(0.20, 0.62 - i*0.04, 0.30);
+                } else {
+                    cv.position.set(0.31, 1.12 - i*0.04, 0);
+                }
+                g.add(cv);
+            }
+        }
+
+        // Identificación opcional encima de la cabeza (para destacar el comandante)
+        if (opts.label) {
+            const labelTex = makeCanvasTexture(128, 32, (ctx) => {
+                ctx.fillStyle = '#0a0d18'; ctx.fillRect(0, 0, 128, 32);
+                ctx.fillStyle = '#ffd54a'; ctx.font = 'bold 16px Arial';
+                ctx.textAlign='center'; ctx.textBaseline='middle';
+                ctx.fillText(opts.label, 64, 16);
+            });
+            const lbl = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.6, 0.15),
+                new THREE.MeshBasicMaterial({ map: labelTex, side: THREE.DoubleSide })
+            );
+            lbl.position.y = (sitting ? 1.18 : 1.74);
+            g.add(lbl);
+        }
+
+        parent.add(g);
+        return g;
+    }
+
+    // Distribuye los 19 miembros de la dotación según el array CREW
+    function populateCrew(parent) {
+        CREW.forEach(c => {
+            const rankInfo = RANKS[c.rank];
+            const opts = {
+                rank: rankInfo.cat,
+                rankInfo: rankInfo,
+                pose: c.pose,
+                rotY: c.rot,
+                label: c.label
+            };
+            const mesh = createCrewMember(parent, c.pos[0], FLOOR_Y, c.pos[1], opts);
+            c.mesh = mesh;            // Referencia para ocultarlo al tomar control
+            c.avatar = createAvatar(c); // Avatar procedural para el panel
+        });
+    }
+
     // ===================== INIT =====================
     function init() {
         scene = new THREE.Scene();
@@ -1161,9 +2691,14 @@
         buildOfficerQuarters(sub);
         buildTorpedoRoom(sub);
 
+        // Tripulación de 19 miembros distribuidos por compartimentos
+        populateCrew(sub);
+
         spawnPlayer();
         setupControls();
         initHud();
+        setupMap();
+        setupCrewModal();
         setHudVisible(true);
         animate();
         addLog('Submarino listo. Click para mirar con ratón.');
@@ -2411,6 +3946,22 @@
                 document.getElementById('btn-periscope').click();
                 e.preventDefault();
             }
+            if (e.code === 'KeyM' && !e.repeat) {
+                toggleMap();
+                e.preventDefault();
+            }
+            if (e.code === 'KeyC' && !e.repeat) {
+                toggleCrewModal();
+                e.preventDefault();
+            }
+            if (e.code === 'KeyR' && !e.repeat && controlledCrew) {
+                releaseControl();
+                e.preventDefault();
+            }
+            if (e.code === 'Escape') {
+                if (mapState.visible) { toggleMap(); e.preventDefault(); }
+                else if (crewModalState.visible) { toggleCrewModal(); e.preventDefault(); }
+            }
         });
 
         // Toggle casco
@@ -2526,26 +4077,70 @@
 
     function animate() {
         requestAnimationFrame(animate);
-        const dt = clock.getDelta();
-        const moveSpeed = 4.5 * dt * speedMultiplier;
+        const dt = Math.min(0.05, clock.getDelta()); // Cap a 50ms para estabilidad física
+        const baseSpeed = physics.enabled ? physics.walkSpeed : 4.5;
+        const moveSpeed = baseSpeed * dt * speedMultiplier;
         const rotSpeed = 1.6 * dt;
 
+        // Movimiento horizontal (igual en ambos modos)
         if (move.fwd)   player.translateZ(-moveSpeed);
         if (move.back)  player.translateZ( moveSpeed);
         if (move.left)  player.translateX(-moveSpeed);
         if (move.right) player.translateX( moveSpeed);
-        if (move.up)    player.position.y += moveSpeed;
-        if (move.down)  player.position.y -= moveSpeed;
         if (move.rotL)  { yaw += rotSpeed; player.rotation.y = yaw; }
         if (move.rotR)  { yaw -= rotSpeed; player.rotation.y = yaw; }
+
+        if (physics.enabled) {
+            // Modo física: gravedad + colisión con suelo
+            physics.velocityY += physics.GRAVITY * dt;
+            player.position.y += physics.velocityY * dt;
+
+            // Determinar suelo: dentro del casco = FLOOR_Y, fuera = lecho marino (-25)
+            const insideHull = isInsideHull(player.position.x, 0, player.position.z) &&
+                               player.position.x > -HALF_L && player.position.x < HALF_L;
+            const eyeH = (controlledCrew && controlledCrew.pose === 'sitting' && physics.velocityY <= 0)
+                        ? physics.EYE_SIT
+                        : physics.EYE_STAND;
+            const floorY = insideHull
+                         ? (FLOOR_Y + eyeH)
+                         : (-25 + physics.EYE_STAND);
+            const ceilY  = insideHull ? (CEIL_Y - 0.05) : 1000;
+
+            if (player.position.y < floorY) {
+                player.position.y = floorY;
+                physics.velocityY = 0;
+            }
+            if (player.position.y > ceilY) {
+                player.position.y = ceilY;
+                if (physics.velocityY > 0) physics.velocityY = 0;
+            }
+            // Salto al pulsar Espacio si está en el suelo
+            if (move.up && Math.abs(player.position.y - floorY) < 0.02) {
+                physics.velocityY = physics.JUMP_VEL;
+            }
+            // En modo física no hay 'descender volando'
+        } else {
+            // Modo vuelo libre (legacy)
+            if (move.up)   player.position.y += moveSpeed;
+            if (move.down) player.position.y -= moveSpeed;
+        }
 
         // Hélice atada al RPM del motor simulado
         if (propeller) propeller.rotation.x += dt * (simSub.motorRpm.actual * 0.025);
 
         // Tick del simulador, animación física del modelo y actualización del HUD
+        autopilotTick();
         simTick(dt);
         applyShipKinematics();
         updateHud();
+        // Mapa táctico: redibujar a 5 Hz cuando esté visible
+        if (mapState.visible) {
+            const tnow = Date.now();
+            if (tnow - mapState.lastDraw > 200) {
+                drawMap();
+                mapState.lastDraw = tnow;
+            }
+        }
 
         updateUI();
         renderer.render(scene, camera);
