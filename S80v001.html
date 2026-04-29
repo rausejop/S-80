@@ -1,0 +1,2420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>S-80 Isaac Peral · Gemelo Digital 3D</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', Arial, sans-serif; color:#cfe; }
+        canvas { display: block; cursor: crosshair; }
+
+        #log-panel {
+            position: absolute; top: 10px; left: 10px;
+            width: 280px; max-height: 110px;
+            background: rgba(0, 0, 0, 0.78);
+            color: #5f5; font-size: 10px; padding: 6px;
+            overflow-y: auto; border: 1px solid #2a4;
+            pointer-events: none; z-index: 100; line-height: 1.3;
+        }
+
+        #info-panel {
+            position: absolute; top: 10px; right: 10px;
+            width: 240px;
+            background: rgba(5, 25, 50, 0.85);
+            font-size: 11px; padding: 9px;
+            border: 1px solid #2a6; z-index: 100; line-height: 1.4;
+        }
+        #info-panel h3 { margin: 0 0 4px 0; font-size: 13px; color: #fff; letter-spacing:.5px; }
+        #info-panel hr { border:none; border-top:1px solid #246; margin: 5px 0; }
+        #info-panel .loc { color: #ffd54a; font-weight: bold; }
+        #info-panel .small { font-size: 10px; color:#9bd; }
+
+        #hint {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #5af; border-radius: 6px;
+            color: #cef; font-size: 13px; text-align:center;
+            z-index: 99; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        #hint.hidden { opacity: 0; }
+
+        #crosshair {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 14px; height: 14px;
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 50%;
+            pointer-events: none; z-index: 90;
+            opacity: 0;
+        }
+        #crosshair.active { opacity: 1; }
+        #crosshair::before, #crosshair::after {
+            content: ''; position: absolute;
+            background: rgba(255,255,255,0.5);
+        }
+        #crosshair::before { left:50%; top:-4px; width:1px; height:6px; }
+        #crosshair::after  { top:50%; left:-4px; height:1px; width:6px; }
+
+        #controls {
+            position: absolute; bottom: 18px; left: 50%;
+            transform: translateX(-50%);
+            display: grid;
+            grid-template-columns: repeat(3, 52px);
+            grid-gap: 6px; z-index: 100;
+        }
+        .btn {
+            width: 52px; height: 52px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid #fff;
+            color: white; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            user-select: none; touch-action: manipulation;
+            font-size: 18px; font-weight: bold;
+        }
+        .btn:active, .btn.on { background: rgba(120, 200, 255, 0.5); }
+
+        #vcontrols {
+            position: absolute; bottom: 18px; right: 18px;
+            display: grid; grid-template-columns: 52px;
+            grid-gap: 6px; z-index: 100;
+        }
+
+        .topBtn {
+            position: absolute; left: 10px;
+            padding: 5px 10px;
+            background: rgba(0, 20, 40, 0.85);
+            color: #cfe; border: 1px solid #4a8;
+            font-size: 11px; cursor: pointer;
+            z-index: 100; min-width: 200px; text-align:left;
+        }
+        .topBtn:hover { background: rgba(0,40,70,0.9); }
+        #toggleHull   { top: 130px; }
+        #toggleSpeed  { top: 158px; }
+        #teleport     { top: 186px; }
+
+        select.topBtn { padding: 4px 8px; }
+
+        /* ========== COCKPIT HUD ========== */
+        #cockpit-hud {
+            position: absolute; inset: 0;
+            pointer-events: none; z-index: 60;
+            font-family: 'Consolas','Courier New',monospace;
+        }
+        #cockpit-hud.hidden { display: none; }
+        .hud-panel {
+            position: absolute; pointer-events: auto;
+            background: linear-gradient(135deg, rgba(8,22,30,0.92), rgba(12,30,22,0.92));
+            border: 1px solid #3a8a5a;
+            border-radius: 4px;
+            color: #6fdca0;
+            padding: 7px 9px;
+            font-size: 11px;
+            text-shadow: 0 0 2px rgba(60,200,120,0.6);
+            box-shadow: 0 0 12px rgba(40,160,90,0.25), inset 0 0 20px rgba(0,0,0,0.4);
+            line-height: 1.3;
+        }
+        .hud-title {
+            color: #ffd54a; font-weight: bold;
+            border-bottom: 1px solid #3a8a5a;
+            margin-bottom: 5px; padding-bottom: 2px;
+            text-transform: uppercase;
+            font-size: 10px; letter-spacing: 1px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .hud-title::after {
+            content: '●'; color: #4fff80; animation: hudblink 2s linear infinite;
+        }
+        @keyframes hudblink { 50% { opacity: 0; } }
+        .hud-val { color: #ffd54a; font-weight: bold; }
+        .hud-warn { color: #ff8800 !important; }
+        .hud-danger { color: #ff4040 !important; text-shadow: 0 0 4px #ff4040; }
+
+        #sonar-panel { top: 130px; left: 10px; width: 318px; }
+        #sonar-canvas { width: 300px; height: 90px; background: #001408; display: block;
+                        border: 1px solid #1a4a2a; image-rendering: pixelated; }
+        #sonar-axis { font-size: 9px; color: #5a9070; display: flex; justify-content: space-between; margin-top: 1px; }
+        #contacts-list { margin-top: 4px; max-height: 70px; overflow-y: auto; font-size: 10px; }
+        .contact-row { padding: 2px 0; border-bottom: 1px dotted #1a4a2a;
+                       display: flex; justify-content: space-between; gap: 6px; }
+        .contact-row .ctype { color: #ffd54a; font-weight: bold; }
+
+        #status-panel { top: 10px; right: 10px; width: 290px; }
+        .status-row { display: flex; justify-content: space-between; padding: 1px 0; }
+        .compartment-grid { display: flex; gap: 3px; margin-top: 4px; }
+        .comp { width: 38px; height: 26px;
+                display: flex; align-items: center; justify-content: center;
+                font-weight: bold; font-size: 11px; border-radius: 2px; cursor: help;}
+        .comp.ok     { background: rgba(40,180,80,0.3); color: #6fdca0; border: 1px solid #2a6a3a; }
+        .comp.warn   { background: rgba(220,160,40,0.3); color: #ffd54a; border: 1px solid #6a5a2a; }
+        .comp.danger { background: rgba(220,60,40,0.3);  color: #ff4040; border: 1px solid #6a2a2a; }
+
+        #helm-panel { bottom: 10px; left: 10px; width: 600px; }
+        .gauges-row { display: flex; gap: 4px; margin-bottom: 6px; justify-content: space-between; }
+        .gauge { flex: 1; text-align: center; }
+        .gauge canvas { width: 92px; height: 92px; background: #0a1418; border-radius: 50%; display: block; margin: 0 auto; }
+        .gauge-label { font-size: 9px; margin-top: 2px; color: #6fdca0; line-height: 1.1; }
+        .gauge-label .gauge-val { display: block; color: #ffd54a; font-weight: bold; font-size: 12px; }
+
+        .eot-row { display: flex; gap: 2px; margin-bottom: 6px; }
+        .eot-btn {
+            flex: 1; padding: 6px 2px; font-size: 9px; cursor: pointer;
+            background: #0e1c20; border: 1px solid #2a5a3a; color: #6fdca0;
+            text-align: center; border-radius: 2px; user-select: none;
+            transition: background 0.15s;
+        }
+        .eot-btn:hover { background: #1a3a2a; }
+        .eot-btn.active { background: #2d6e3a; color: #ffd54a; border-color: #ffd54a; box-shadow: 0 0 5px #4fff80; }
+
+        .helm-controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+        .helm-controls button {
+            padding: 5px 4px; font-size: 10px; cursor: pointer;
+            background: #0e1c20; border: 1px solid #2a5a3a; color: #6fdca0;
+            border-radius: 2px;
+        }
+        .helm-controls button:hover { background: #1a3a2a; }
+        .helm-controls button:active { background: #2d6e3a; }
+        .helm-controls button.danger { border-color: #aa4040; color: #ffaaaa; }
+        .helm-controls button.danger:hover { background: #4a1a1a; }
+
+        #propulsion-panel { bottom: 10px; right: 10px; width: 290px; }
+        .prop-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .prop-table td { padding: 3px 4px; border-bottom: 1px solid #1a3a2a; }
+        .prop-table td:first-child { color: #aacfbf; font-size: 10px; }
+        .prop-table td:last-child { text-align: right; color: #ffd54a; font-weight: bold; }
+        .led {
+            display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+            margin-right: 5px; vertical-align: middle;
+        }
+        .led.on   { background: #4fff80; box-shadow: 0 0 6px #4fff80; }
+        .led.off  { background: #333; }
+        .led.warn { background: #ffaa00; box-shadow: 0 0 6px #ffaa00; }
+        .led.err  { background: #ff4040; box-shadow: 0 0 6px #ff4040; }
+        .prop-actions { display: flex; gap: 3px; margin-top: 6px; }
+        .prop-actions button {
+            flex: 1; padding: 4px; font-size: 10px; cursor: pointer;
+            background: #0e1c20; border: 1px solid #2a5a3a; color: #6fdca0; border-radius: 2px;
+        }
+        .prop-actions button:hover { background: #1a3a2a; }
+
+        #weapons-panel { top: 50%; right: 10px; width: 270px; transform: translateY(-50%); }
+        .tube-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 6px; }
+        .tube {
+            background: #0e1c20; border: 1px solid #2a5a3a;
+            padding: 6px 4px; text-align: center; cursor: pointer;
+            font-size: 10px; border-radius: 2px;
+        }
+        .tube .tube-num { font-weight: bold; color: #ffd54a; font-size: 11px; }
+        .tube .tube-state { display: block; font-size: 9px; margin-top: 2px; color: #777; }
+        .tube .tube-wpn { display: block; font-size: 9px; color: #aac; }
+        .tube.LOADED  { border-color: #4fff80; }
+        .tube.LOADED .tube-state { color: #4fff80; }
+        .tube.FLOODED { border-color: #44aaff; }
+        .tube.FLOODED .tube-state { color: #44aaff; }
+        .tube.OPEN    { border-color: #ffaa00; box-shadow: 0 0 5px rgba(255,170,0,0.4); }
+        .tube.OPEN .tube-state { color: #ffaa00; }
+        .tube.FIRED   { border-color: #ff4040; opacity: 0.5; }
+        .tube.FIRED .tube-state { color: #ff4040; }
+
+        .fire-row button {
+            width: 100%; padding: 8px; font-weight: bold; cursor: pointer;
+            background: #6a1a1a; border: 1px solid #ff4040;
+            color: #ffeeaa; font-size: 12px; border-radius: 3px;
+            letter-spacing: 1px;
+        }
+        .fire-row button:hover { background: #8a2020; }
+        .fire-row button:active { background: #aa3030; }
+
+        #ballast-panel { bottom: 10px; left: 50%; transform: translateX(-50%); width: 440px; }
+        .tank-row { display: flex; gap: 3px; margin-bottom: 4px; }
+        .tank {
+            flex: 1; height: 50px;
+            background: #0a1418; border: 1px solid #3a5a4a;
+            position: relative; font-size: 9px; text-align: center; border-radius: 2px;
+            overflow: hidden;
+        }
+        .tank .tank-fill {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, #0e3460, #2a6da0);
+            transition: height 0.4s ease-out;
+        }
+        .tank .tank-label {
+            position: absolute; top: 3px; left: 0; right: 0;
+            color: #ffd54a; font-weight: bold; z-index: 2; font-size: 9px;
+            text-shadow: 0 0 2px #000;
+        }
+        .tank .tank-pct {
+            position: absolute; bottom: 3px; left: 0; right: 0;
+            color: #fff; font-weight: bold; z-index: 2;
+            text-shadow: 0 0 3px #000;
+        }
+        .ballast-actions { display: flex; gap: 4px; margin-top: 6px; }
+        .ballast-actions button {
+            flex: 1; padding: 6px; cursor: pointer;
+            background: #0e1c20; border: 1px solid #2a5a3a; color: #6fdca0;
+            font-size: 10px; border-radius: 2px;
+        }
+        .ballast-actions button:hover { background: #1a3a2a; }
+        .ballast-actions button.danger { border-color: #aa4040; color: #ffaaaa; }
+        .ballast-actions button.danger:hover { background: #4a1a1a; }
+
+        #hudToggleBtn { top: 214px; }
+
+        @media (max-width: 1380px) {
+            #helm-panel { width: 520px; }
+            .gauge canvas { width: 80px; height: 80px; }
+            #weapons-panel { width: 230px; }
+            #propulsion-panel { width: 260px; }
+            #status-panel { width: 260px; }
+            #sonar-panel { width: 280px; }
+            #sonar-canvas { width: 264px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="log-panel"></div>
+
+    <div id="info-panel">
+        <h3>S-80 ISAAC PERAL</h3>
+        <div>Eslora total: <b>81,05 m</b></div>
+        <div>Manga: <b>7,3 m</b></div>
+        <div>Calado: <b>6,2 m</b></div>
+        <div>Desplazamiento: <b>~3.000 t</b></div>
+        <div>Propulsión: AIP bioetanol + diésel</div>
+        <div>Tripulación: 32 + 8 op. especiales</div>
+        <hr>
+        <div>Ubicación: <span class="loc" id="locLabel">Exterior</span></div>
+        <div class="small" id="coords">x:0 y:0 z:0</div>
+        <hr>
+        <div class="small">Click izq.: mirar con ratón · ESC: liberar<br>WASD/flechas · Q/E giro · Espacio↑ Shift↓</div>
+    </div>
+
+    <button id="toggleHull"  class="topBtn">Casco: Semitransparente</button>
+    <button id="toggleSpeed" class="topBtn">Velocidad: Normal</button>
+    <button id="hudToggleBtn" class="topBtn">Cockpit HUD: ON</button>
+    <select id="teleport" class="topBtn">
+        <option value="">— Teletransportarse a... —</option>
+        <option value="ext">Exterior (vista general)</option>
+        <option value="bridge">Cofa de la vela</option>
+        <option value="torpedo">Sala de torpedos (proa)</option>
+        <option value="officer">Camarotes oficiales</option>
+        <option value="cic">Sala de control / CIC</option>
+        <option value="crew">Camarotes / Cocina</option>
+        <option value="aip">Planta AIP</option>
+        <option value="engine">Sala de motores</option>
+    </select>
+
+    <div id="crosshair"></div>
+    <div id="hint">Haz click para mirar con el ratón<br><span style="font-size:11px;color:#9bd">WASD para moverte · ESC libera el ratón</span></div>
+
+    <div id="controls">
+        <div class="btn" id="rotL">↺</div>
+        <div class="btn" id="fwd">↑</div>
+        <div class="btn" id="rotR">↻</div>
+        <div class="btn" id="left">←</div>
+        <div class="btn" id="back">↓</div>
+        <div class="btn" id="right">→</div>
+    </div>
+
+    <div id="vcontrols">
+        <div class="btn" id="up">▲</div>
+        <div class="btn" id="down">▼</div>
+    </div>
+
+    <!-- ===================== COCKPIT HUD ===================== -->
+    <div id="cockpit-hud">
+
+      <!-- SONAR PASIVO Y CONTACTOS -->
+      <div class="hud-panel" id="sonar-panel">
+        <div class="hud-title"><span>Sonar pasivo · CFTT</span></div>
+        <canvas id="sonar-canvas" width="300" height="90"></canvas>
+        <div id="sonar-axis"><span>0°</span><span>090°</span><span>180°</span><span>270°</span><span>360°</span></div>
+        <div id="contacts-list"></div>
+      </div>
+
+      <!-- ESTADO DEL BUQUE -->
+      <div class="hud-panel" id="status-panel">
+        <div class="hud-title"><span>Estado del Buque</span></div>
+        <div class="status-row"><span>Rumbo</span><span class="hud-val" id="hud-hdg">000°</span></div>
+        <div class="status-row"><span>Profundidad</span><span class="hud-val" id="hud-depth">0,0 m</span></div>
+        <div class="status-row"><span>Velocidad</span><span class="hud-val" id="hud-speed">0,0 kn</span></div>
+        <div class="status-row"><span>Posición</span><span class="hud-val" id="hud-pos">36°03,0'N 005°25,2'W</span></div>
+        <div class="status-row"><span>Casco</span><span class="hud-val">100%</span></div>
+        <div class="status-row"><span>Presión amb.</span><span class="hud-val" id="hud-press">2,18 bar</span></div>
+        <div class="status-row"><span>O₂ aire</span><span class="hud-val" id="hud-o2">20,9%</span></div>
+        <div class="status-row"><span>CO₂</span><span class="hud-val" id="hud-co2">0,07%</span></div>
+        <div class="status-row"><span>Temp / Humedad</span><span class="hud-val"><span id="hud-temp">22</span>°C / <span id="hud-hum">52</span>%</span></div>
+        <div style="margin-top:5px;color:#aacfbf;font-size:10px;">Compartimentos:</div>
+        <div class="compartment-grid">
+          <div class="comp ok" title="Sala de motores">MOT</div>
+          <div class="comp ok" title="Planta AIP">AIP</div>
+          <div class="comp ok" title="Camarotes / Cocina">TRP</div>
+          <div class="comp ok" title="Sala de control / CIC">CIC</div>
+          <div class="comp ok" title="Camarotes oficiales">OFI</div>
+          <div class="comp ok" title="Sala de torpedos">TOR</div>
+        </div>
+      </div>
+
+      <!-- HELM (timonel) -->
+      <div class="hud-panel" id="helm-panel">
+        <div class="hud-title"><span>Puesto de Maniobra · Timonel · CONAN-SUB</span></div>
+        <div class="gauges-row">
+          <div class="gauge"><canvas id="g-rudder" width="92" height="92"></canvas>
+            <div class="gauge-label">Timón<span class="gauge-val" id="v-rudder">0°</span></div></div>
+          <div class="gauge"><canvas id="g-bowplanes" width="92" height="92"></canvas>
+            <div class="gauge-label">Pl. proa<span class="gauge-val" id="v-bowplanes">0°</span></div></div>
+          <div class="gauge"><canvas id="g-sternplanes" width="92" height="92"></canvas>
+            <div class="gauge-label">Pl. popa<span class="gauge-val" id="v-sternplanes">0°</span></div></div>
+          <div class="gauge"><canvas id="g-depth" width="92" height="92"></canvas>
+            <div class="gauge-label">Profundidad<span class="gauge-val" id="v-depth">0 m</span></div></div>
+          <div class="gauge"><canvas id="g-speed" width="92" height="92"></canvas>
+            <div class="gauge-label">Velocidad<span class="gauge-val" id="v-speed">0 kn</span></div></div>
+          <div class="gauge"><canvas id="g-compass" width="92" height="92"></canvas>
+            <div class="gauge-label">Compás<span class="gauge-val" id="v-compass">000°</span></div></div>
+        </div>
+        <div class="eot-row">
+          <div class="eot-btn" data-throttle="back-full">AT.AV</div>
+          <div class="eot-btn" data-throttle="back-1/3">AT.1/3</div>
+          <div class="eot-btn" data-throttle="stop">PARO</div>
+          <div class="eot-btn active" data-throttle="ahead-1/3">AV.1/3</div>
+          <div class="eot-btn" data-throttle="ahead-2/3">AV.2/3</div>
+          <div class="eot-btn" data-throttle="standard">EST.</div>
+          <div class="eot-btn" data-throttle="full">TODA</div>
+          <div class="eot-btn" data-throttle="flank">FLANCO</div>
+        </div>
+        <div class="helm-controls">
+          <button data-helm="rudder" data-d="-5">◀ Babor 5°</button>
+          <button data-helm="rudder" data-d="0">Centro Timón</button>
+          <button data-helm="rudder" data-d="5">Estribor 5° ▶</button>
+          <button data-helm="periscope">🔭 Izar Periscopio</button>
+          <button data-helm="bowplanes" data-d="-5">▼ Pl.proa abajo</button>
+          <button data-helm="bowplanes" data-d="0">Pl.proa cero</button>
+          <button data-helm="bowplanes" data-d="5">▲ Pl.proa arriba</button>
+          <button data-helm="surface">↑ A SUPERFICIE</button>
+          <button data-helm="sternplanes" data-d="-5">▼ Pl.popa abajo</button>
+          <button data-helm="sternplanes" data-d="0">Pl.popa cero</button>
+          <button data-helm="sternplanes" data-d="5">▲ Pl.popa arriba</button>
+          <button data-helm="emergency" class="danger">⚠ INMERSIÓN</button>
+        </div>
+      </div>
+
+      <!-- PROPULSIÓN, AIP y ENERGÍA -->
+      <div class="hud-panel" id="propulsion-panel">
+        <div class="hud-title"><span>Propulsión · AIP · Energía</span></div>
+        <table class="prop-table">
+          <tr><td><span class="led on" id="led-aip"></span>AIP Bioetanol</td><td><span id="aip-status">EN LÍNEA</span></td></tr>
+          <tr><td><span class="led off" id="led-diesel"></span>Diésel MTU 16V 396</td><td><span id="diesel-status">PARADO</span></td></tr>
+          <tr><td><span class="led on" id="led-batt"></span>Batería principal</td><td><span id="batt-status">DESCARGA</span></td></tr>
+          <tr><td><span class="led off" id="led-snork"></span>Snorkel</td><td><span id="snork-status">BAJO</span></td></tr>
+          <tr><td>Carga batería</td><td><span id="v-batt">87,0%</span></td></tr>
+          <tr><td>Motor principal</td><td><span id="v-motor-rpm">0 rpm</span></td></tr>
+          <tr><td>Eje</td><td><span id="v-shaft-pwr">0 kW</span></td></tr>
+          <tr><td>O₂ líquido (LOX)</td><td><span id="v-lox">94,0%</span></td></tr>
+          <tr><td>Bioetanol</td><td><span id="v-etoh">82%</span></td></tr>
+          <tr><td>H₂ reformador</td><td><span id="v-h2">activo</span></td></tr>
+        </table>
+        <div class="prop-actions">
+          <button data-sys="diesel">Arrancar Diésel</button>
+          <button data-sys="snorkel">Izar Snorkel</button>
+          <button data-sys="aip">AIP On/Off</button>
+        </div>
+      </div>
+
+      <!-- ARMAMENTO -->
+      <div class="hud-panel" id="weapons-panel">
+        <div class="hud-title"><span>Sistema de Armas · DM2A4 / SUT</span></div>
+        <div class="tube-grid" id="tube-grid"></div>
+        <div style="font-size:10px;color:#aacfbf;line-height:1.4;">
+          Solución FC: <span class="hud-val" id="fc-solution">N/A</span><br>
+          Blanco: <span class="hud-val" id="fc-target">—</span><br>
+          Tubo activo: <span class="hud-val" id="fc-tube">ninguno</span>
+        </div>
+        <div style="font-size:9px;color:#5a9070;margin-top:3px;">Click tubo: VAC→CARG→INUND→ABIERTO</div>
+        <div class="fire-row" style="margin-top:6px;">
+          <button id="fire-btn">⚠ FUEGO ⚠</button>
+        </div>
+      </div>
+
+      <!-- LASTRE Y TRIMADO -->
+      <div class="hud-panel" id="ballast-panel">
+        <div class="hud-title"><span>Lastre Principal y Trimado</span></div>
+        <div class="tank-row">
+          <div class="tank" id="t-mbt1"><div class="tank-fill"></div><div class="tank-label">MBT 1</div><div class="tank-pct">50%</div></div>
+          <div class="tank" id="t-mbt2"><div class="tank-fill"></div><div class="tank-label">MBT 2</div><div class="tank-pct">50%</div></div>
+          <div class="tank" id="t-mbt3"><div class="tank-fill"></div><div class="tank-label">MBT 3</div><div class="tank-pct">50%</div></div>
+          <div class="tank" id="t-mbt4"><div class="tank-fill"></div><div class="tank-label">MBT 4</div><div class="tank-pct">50%</div></div>
+          <div class="tank" id="t-mbt5"><div class="tank-fill"></div><div class="tank-label">MBT 5</div><div class="tank-pct">50%</div></div>
+        </div>
+        <div class="tank-row">
+          <div class="tank" id="t-tfwd"><div class="tank-fill"></div><div class="tank-label">TRIM PROA</div><div class="tank-pct">30%</div></div>
+          <div class="tank" id="t-taft"><div class="tank-fill"></div><div class="tank-label">TRIM POPA</div><div class="tank-pct">30%</div></div>
+          <div class="tank" id="t-neg"><div class="tank-fill"></div><div class="tank-label">NEGATIVO</div><div class="tank-pct">0%</div></div>
+          <div class="tank" id="t-aux"><div class="tank-fill"></div><div class="tank-label">AUX</div><div class="tank-pct">15%</div></div>
+        </div>
+        <div class="ballast-actions">
+          <button id="b-blow">SOPLAR MBT</button>
+          <button id="b-flood">INUNDAR MBT</button>
+          <button id="b-trim-fwd">Bombear→PROA</button>
+          <button id="b-trim-aft">Bombear→POPA</button>
+          <button id="b-emergency" class="danger">⚠ SOPLO EMERG.</button>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+        const logPanel = document.getElementById('log-panel');
+        function addLog(msg, isError = false) {
+            const e = document.createElement('div');
+            e.style.color = isError ? '#f55' : '#5f5';
+            e.textContent = '> ' + new Date().toLocaleTimeString() + ' ' + msg;
+            logPanel.appendChild(e);
+            logPanel.scrollTop = logPanel.scrollHeight;
+            console.log(msg);
+        }
+        window.onerror = (m, u, l) => addLog('ERROR: ' + m + ' línea ' + l, true);
+        addLog('Iniciando S-80 Gemelo Digital...');
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="S80v001_assets.js"></script>
+
+    <script>
+    addLog('Three.js r128 cargado');
+    addLog(window.S80_PHOTOS ? ('Imágenes embebidas: ' + Object.keys(window.S80_PHOTOS).length) : 'AVISO: S80v001_assets.js no encontrado');
+
+    // ===================== CONSTANTES =====================
+    const HULL_LENGTH = 81.05;
+    const HULL_RADIUS = 3.65;
+    const HALF_L = HULL_LENGTH / 2;
+
+    // Interior humanizado
+    const FLOOR_Y = -0.95;
+    const CEIL_Y  =  1.20;     // 2,15 m de altura libre
+    const EYE     =  1.65;     // ojos a 1,65 m del suelo
+    const STAND_Y = FLOOR_Y + EYE;   // altura de pie (~0.70)
+
+    const SAIL_X = 11.5;       // posición longitudinal de la vela
+    const SAIL_TOP_Y = HULL_RADIUS + 4.2;
+
+    const TEX_PATH = 'S-80/9fb562a5_1163_47c0_b249_53721b196ba3_51e84f8fda.png';
+
+    const COMPARTMENTS = [
+        { x0: -HALF_L,    x1: -24.5, name: 'Sala de motores y propulsión' },
+        { x0: -24.5,      x1:  -9.5, name: 'Planta AIP / Bioetanol' },
+        { x0:  -9.5,      x1:   4.5, name: 'Camarotes tripulación / Cocina' },
+        { x0:   4.5,      x1:  18.5, name: 'Sala de control / CIC' },
+        { x0:  18.5,      x1:  28.5, name: 'Camarotes oficiales / Aseos' },
+        { x0:  28.5,      x1:  HALF_L, name: 'Sala de torpedos (proa)' }
+    ];
+
+    // Fotos reales del interior, asignadas al compartimento correspondiente.
+    // compartment = índice en COMPARTMENTS (0=motores ... 5=torpedos)
+    // side = 'port' (z negativo) o 'starboard' (z positivo)
+    // key = clave en window.S80_PHOTOS (S80v001_assets.js)
+    const INTERIOR_PHOTOS = [
+        { key: '888o2f2o9oje1', compartment: 0, side: 'port',      title: 'MOTOR DIÉSEL MTU' },
+        { key: 'cztlnhym9oje1', compartment: 1, side: 'port',      title: 'PANEL ELÉCTRICO / AIP' },
+        { key: 'dkn9ka9k9oje1', compartment: 1, side: 'starboard', title: 'CONSOLA PROPULSIÓN Y SISTEMAS' },
+        { key: 'onom4rqp9oje1', compartment: 2, side: 'port',      title: 'PASILLO CAMAROTES' },
+        { key: 'ahlm4jrl9oje1', compartment: 3, side: 'port',      title: 'CONSOLA DE OFICIAL · CIC' },
+        { key: 'mz7lr6gd9oje1', compartment: 3, side: 'starboard', title: 'PUESTO DE CONTROL · CIC' },
+        { key: 'amad02oq9oje1', compartment: 4, side: 'port',      title: 'TODO POR LA PATRIA' },
+        { key: 's1t988zo9oje1', compartment: 4, side: 'starboard', title: 'CAMAROTE INDIVIDUAL' }
+    ];
+
+    const TELEPORT_POINTS = {
+        ext:     { p: [0, 14, 35], yaw: 0, pitch: -0.3 },
+        bridge:  { p: [SAIL_X - 1, SAIL_TOP_Y + 0.8, 0], yaw: 0, pitch: 0 },
+        torpedo: { p: [34, STAND_Y, 0], yaw: -Math.PI/2, pitch: 0 },
+        officer: { p: [23, STAND_Y, 0], yaw: -Math.PI/2, pitch: 0 },
+        cic:     { p: [11.5, STAND_Y, 0], yaw: -Math.PI/2, pitch: 0 },
+        crew:    { p: [-2, STAND_Y, 0], yaw: -Math.PI/2, pitch: 0 },
+        aip:     { p: [-17, STAND_Y, 0], yaw: -Math.PI/2, pitch: 0 },
+        engine:  { p: [-32, STAND_Y, 0], yaw: -Math.PI/2, pitch: 0 }
+    };
+
+    // ===================== GLOBALES =====================
+    let scene, camera, renderer, player;
+    let propeller, hullMaterial, controlRoomTex;
+    let yaw = 0, pitch = -0.25, mouseLocked = false;
+    let speedMultiplier = 1;
+    const clock = new THREE.Clock();
+    const move = { fwd:0, back:0, left:0, right:0, up:0, down:0, rotL:0, rotR:0 };
+
+    // ===================== HELPERS =====================
+    function mat(color, opts = {}) {
+        return new THREE.MeshPhongMaterial(Object.assign({ color }, opts));
+    }
+    function box(parent, x, y, z, sx, sy, sz, color, opts) {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat(color, opts));
+        m.position.set(x, y, z);
+        parent.add(m);
+        return m;
+    }
+    function cyl(parent, x, y, z, r1, r2, h, color, axis = 'y', opts) {
+        const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, 16), mat(color, opts));
+        m.position.set(x, y, z);
+        if (axis === 'x') m.rotation.z = Math.PI / 2;
+        if (axis === 'z') m.rotation.x = Math.PI / 2;
+        parent.add(m);
+        return m;
+    }
+    function sphere(parent, x, y, z, r, color, opts) {
+        const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), mat(color, opts));
+        m.position.set(x, y, z);
+        parent.add(m);
+        return m;
+    }
+    function makeCanvasTexture(w, h, drawFn) {
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        drawFn(c.getContext('2d'), w, h);
+        const t = new THREE.CanvasTexture(c);
+        t.anisotropy = 4;
+        return t;
+    }
+
+    // ===================== SIMULADOR / COCKPIT =====================
+    const simSub = {
+        rudder:      { ordered: 0, actual: 0, max: 35 },
+        bowPlanes:   { ordered: 0, actual: 0, max: 25 },
+        sternPlanes: { ordered: 0, actual: 0, max: 25 },
+        throttle: 'ahead-1/3',
+        motorRpm: { ordered: 50, actual: 0 },
+        speed: 0, depth: 12, heading: 0,
+        aipOn: true, aipPct: 100,
+        dieselOn: false, dieselRpm: 0,
+        battery: 87, batteryDir: 'discharge',
+        snorkel: false, loxPct: 94, etohPct: 82,
+        shaftPower: 0,
+        pressure: 2.18, o2: 20.9, co2: 0.07, temp: 22, humidity: 52,
+        position: { lat: 36.05, lon: -5.42 },
+        mbt: [50, 50, 50, 50, 50],
+        trimFwd: 30, trimAft: 30, neg: 0, aux: 15,
+        tubes: [
+            { state: 'LOADED',  weapon: 'DM2A4' },
+            { state: 'LOADED',  weapon: 'DM2A4' },
+            { state: 'EMPTY',   weapon: null },
+            { state: 'EMPTY',   weapon: null },
+            { state: 'LOADED',  weapon: 'SUT' },
+            { state: 'EMPTY',   weapon: null }
+        ],
+        contacts: [
+            { id: 'M01', bearing:  45, range: 12.3, speed: 12.0, classification: 'MERC.',   confidence: 'HI'  },
+            { id: 'S01', bearing: 220, range:  8.7, speed:  4.0, classification: 'SUBM(?)', confidence: 'LOW' },
+            { id: 'B01', bearing: 110, range: 22.0, speed: 22.5, classification: 'BIOLG.',  confidence: 'MID' },
+            { id: 'M02', bearing: 305, range: 16.1, speed:  6.5, classification: 'PESQ.',   confidence: 'MID' }
+        ],
+        hudOn: true,
+        sonarTime: 0
+    };
+    const THROTTLE_RPM = {
+        'back-full': -150, 'back-1/3': -50, 'stop': 0,
+        'ahead-1/3': 50, 'ahead-2/3': 100, 'standard': 130, 'full': 160, 'flank': 190
+    };
+    let hudInited = false;
+
+    function initHud() {
+        // Tube grid
+        const tg = document.getElementById('tube-grid');
+        simSub.tubes.forEach((t, i) => {
+            const div = document.createElement('div');
+            div.className = 'tube ' + t.state;
+            div.dataset.idx = i;
+            div.innerHTML = '<span class="tube-num">T' + (i+1) + '</span>' +
+                            '<span class="tube-state">' + t.state + '</span>' +
+                            '<span class="tube-wpn">' + (t.weapon || '—') + '</span>';
+            div.addEventListener('click', (e) => { e.stopPropagation(); cycleTube(i); });
+            tg.appendChild(div);
+        });
+
+        // EOT
+        document.querySelectorAll('.eot-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                simSub.throttle = btn.dataset.throttle;
+                document.querySelectorAll('.eot-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                addLog('EOT → ' + btn.textContent.trim());
+            });
+        });
+
+        // Helm
+        document.querySelectorAll('.helm-controls button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const h = btn.dataset.helm;
+                if (h === 'emergency') {
+                    simSub.bowPlanes.ordered = -25;
+                    simSub.sternPlanes.ordered = -25;
+                    simSub.throttle = 'flank';
+                    simSub.mbt = simSub.mbt.map(() => 100);
+                    document.querySelectorAll('.eot-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelector('[data-throttle="flank"]').classList.add('active');
+                    addLog('⚠ INMERSIÓN DE EMERGENCIA');
+                } else if (h === 'periscope') {
+                    const p = TELEPORT_POINTS.bridge;
+                    player.position.set(p.p[0], p.p[1], p.p[2]);
+                    yaw = p.yaw; pitch = p.pitch;
+                    player.rotation.y = yaw; camera.rotation.x = pitch;
+                    addLog('Periscopio izado · cofa de la vela');
+                } else if (h === 'surface') {
+                    simSub.bowPlanes.ordered = 15;
+                    simSub.sternPlanes.ordered = 15;
+                    simSub.mbt = simSub.mbt.map(() => 0);
+                    addLog('Soplado MBT → emergiendo');
+                } else if (h === 'rudder' || h === 'bowplanes' || h === 'sternplanes') {
+                    const d = parseFloat(btn.dataset.d);
+                    const obj = h === 'rudder' ? simSub.rudder
+                              : (h === 'bowplanes' ? simSub.bowPlanes : simSub.sternPlanes);
+                    obj.ordered = (d === 0) ? 0
+                                : Math.max(-obj.max, Math.min(obj.max, obj.ordered + d));
+                }
+            });
+        });
+
+        // Ballast
+        document.getElementById('b-blow').addEventListener('click', e => {
+            e.stopPropagation();
+            simSub.mbt = simSub.mbt.map(v => Math.max(0, v - 25));
+            addLog('Soplando MBT principales');
+        });
+        document.getElementById('b-flood').addEventListener('click', e => {
+            e.stopPropagation();
+            simSub.mbt = simSub.mbt.map(v => Math.min(100, v + 25));
+            addLog('Inundando MBT principales');
+        });
+        document.getElementById('b-trim-fwd').addEventListener('click', e => {
+            e.stopPropagation();
+            const xfer = Math.min(10, simSub.trimAft);
+            simSub.trimAft -= xfer; simSub.trimFwd = Math.min(100, simSub.trimFwd + xfer);
+            addLog('Bombeo trim popa → proa (' + xfer + '%)');
+        });
+        document.getElementById('b-trim-aft').addEventListener('click', e => {
+            e.stopPropagation();
+            const xfer = Math.min(10, simSub.trimFwd);
+            simSub.trimFwd -= xfer; simSub.trimAft = Math.min(100, simSub.trimAft + xfer);
+            addLog('Bombeo trim proa → popa (' + xfer + '%)');
+        });
+        document.getElementById('b-emergency').addEventListener('click', e => {
+            e.stopPropagation();
+            simSub.mbt = simSub.mbt.map(() => 0);
+            simSub.bowPlanes.ordered = 25;
+            simSub.sternPlanes.ordered = 25;
+            addLog('⚠ SOPLO DE EMERGENCIA');
+        });
+
+        // Power systems
+        document.querySelectorAll('.prop-actions button').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                const sys = btn.dataset.sys;
+                if (sys === 'diesel') {
+                    simSub.dieselOn = !simSub.dieselOn;
+                    simSub.dieselRpm = simSub.dieselOn ? 1200 : 0;
+                    addLog('Diésel ' + (simSub.dieselOn ? 'ARRANCADO' : 'PARADO'));
+                } else if (sys === 'snorkel') {
+                    simSub.snorkel = !simSub.snorkel;
+                    addLog('Snorkel ' + (simSub.snorkel ? 'IZADO' : 'BAJADO'));
+                } else if (sys === 'aip') {
+                    simSub.aipOn = !simSub.aipOn;
+                    addLog('AIP ' + (simSub.aipOn ? 'EN LÍNEA' : 'PARADA'));
+                }
+            });
+        });
+
+        // Fire
+        document.getElementById('fire-btn').addEventListener('click', e => {
+            e.stopPropagation();
+            fireWeapon();
+        });
+
+        // HUD toggle
+        document.getElementById('hudToggleBtn').addEventListener('click', () => {
+            setHudVisible(!simSub.hudOn);
+        });
+
+        hudInited = true;
+        addLog('Cockpit HUD inicializado · 6 paneles');
+    }
+
+    function cycleTube(i) {
+        const t = simSub.tubes[i];
+        const cycle = ['EMPTY','LOADED','FLOODED','OPEN'];
+        if (t.state === 'FIRED') return;
+        const idx = cycle.indexOf(t.state);
+        t.state = cycle[(idx + 1) % cycle.length];
+        if (t.state === 'LOADED' && !t.weapon) t.weapon = 'DM2A4';
+        if (t.state === 'EMPTY') t.weapon = null;
+        const div = document.querySelector('.tube[data-idx="' + i + '"]');
+        div.className = 'tube ' + t.state;
+        div.querySelector('.tube-state').textContent = t.state;
+        div.querySelector('.tube-wpn').textContent = t.weapon || '—';
+    }
+
+    function fireWeapon() {
+        const idx = simSub.tubes.findIndex(t => t.state === 'OPEN');
+        if (idx < 0) {
+            addLog('✗ Ningún tubo en estado OPEN', true);
+            return;
+        }
+        const t = simSub.tubes[idx];
+        t.state = 'FIRED';
+        const div = document.querySelector('.tube[data-idx="' + idx + '"]');
+        div.className = 'tube FIRED';
+        div.querySelector('.tube-state').textContent = 'FIRED';
+        addLog('🚀 ' + (t.weapon || 'TORPEDO') + ' lanzado por T' + (idx+1));
+        setTimeout(() => {
+            t.state = 'EMPTY'; t.weapon = null;
+            div.className = 'tube EMPTY';
+            div.querySelector('.tube-state').textContent = 'EMPTY';
+            div.querySelector('.tube-wpn').textContent = '—';
+        }, 6000);
+    }
+
+    function simTick(dt) {
+        const k = (cur, tgt, rate) => cur + (tgt - cur) * Math.min(1, dt * rate);
+
+        simSub.rudder.actual      = k(simSub.rudder.actual,      simSub.rudder.ordered, 0.8);
+        simSub.bowPlanes.actual   = k(simSub.bowPlanes.actual,   simSub.bowPlanes.ordered, 0.7);
+        simSub.sternPlanes.actual = k(simSub.sternPlanes.actual, simSub.sternPlanes.ordered, 0.7);
+
+        simSub.motorRpm.ordered = THROTTLE_RPM[simSub.throttle];
+        simSub.motorRpm.actual = k(simSub.motorRpm.actual, simSub.motorRpm.ordered, 0.4);
+        simSub.speed = simSub.motorRpm.actual * 0.06;
+
+        simSub.heading += simSub.rudder.actual * Math.abs(simSub.speed) * 0.04 * dt;
+        simSub.heading = ((simSub.heading % 360) + 360) % 360;
+
+        // Profundidad por planos popa principalmente
+        simSub.depth -= simSub.sternPlanes.actual * Math.abs(simSub.speed) * 0.012 * dt;
+        simSub.depth -= simSub.bowPlanes.actual   * Math.abs(simSub.speed) * 0.008 * dt;
+        const avgMbt = simSub.mbt.reduce((a,b)=>a+b,0) / 5;
+        const buoy = (50 - avgMbt) * 0.06; // m/s vertical
+        simSub.depth -= buoy * dt;
+        simSub.depth = Math.max(0, Math.min(300, simSub.depth));
+
+        simSub.pressure = 1.013 + simSub.depth * 0.0985;
+
+        // Atmósfera
+        simSub.co2 = Math.min(0.5, simSub.co2 + dt * 0.00006);
+        simSub.o2  = Math.max(18.0, simSub.o2  - dt * 0.00004);
+        if (simSub.aipOn) {
+            simSub.o2  = Math.min(20.9, simSub.o2  + dt * 0.00010);
+            simSub.co2 = Math.max(0.04, simSub.co2 - dt * 0.00012);
+            simSub.loxPct = Math.max(0, simSub.loxPct - dt * 0.001);
+            simSub.etohPct = Math.max(0, simSub.etohPct - dt * 0.0008);
+        }
+
+        // Batería
+        if (simSub.dieselOn && simSub.snorkel && simSub.depth < 8) {
+            simSub.battery = Math.min(100, simSub.battery + dt * 0.6);
+            simSub.batteryDir = 'charge';
+        } else {
+            const drain = 0.02 + Math.abs(simSub.motorRpm.actual) * 0.0006;
+            simSub.battery = Math.max(0, simSub.battery - dt * drain);
+            simSub.batteryDir = 'discharge';
+        }
+        simSub.shaftPower = Math.abs(simSub.motorRpm.actual) * 4.5;
+
+        // Posición geográfica (avance lento sobre el mapa)
+        const hdgRad = simSub.heading * Math.PI / 180;
+        const dKm = simSub.speed * 1.852 * dt / 3600;
+        simSub.position.lat += Math.cos(hdgRad) * dKm / 111;
+        simSub.position.lon += Math.sin(hdgRad) * dKm / (111 * Math.cos(simSub.position.lat * Math.PI/180));
+
+        // Drift T/H
+        simSub.temp += (Math.random()-0.5) * dt * 0.05;
+        simSub.humidity += (Math.random()-0.5) * dt * 0.1;
+        simSub.temp = Math.max(18, Math.min(28, simSub.temp));
+        simSub.humidity = Math.max(40, Math.min(70, simSub.humidity));
+
+        // Mover ligeramente los contactos
+        simSub.contacts.forEach(c => {
+            c.bearing = ((c.bearing + (Math.random()-0.5) * dt * 1.5) + 360) % 360;
+            c.range = Math.max(2, c.range + (Math.random()-0.5) * dt * 0.3);
+        });
+    }
+
+    function fmtSigned(v, unit) { return (v >= 0 ? '+' : '') + v.toFixed(0) + unit; }
+    function fmtLatLon(lat, lon) {
+        const ns = lat >= 0 ? 'N' : 'S', ew = lon >= 0 ? 'E' : 'W';
+        const lad = Math.floor(Math.abs(lat));
+        const lam = ((Math.abs(lat) - lad) * 60).toFixed(2);
+        const lod = Math.floor(Math.abs(lon));
+        const lom = ((Math.abs(lon) - lod) * 60).toFixed(2);
+        return lad + '°' + lam + "'" + ns + ' ' + lod + '°' + lom + "'" + ew;
+    }
+    const setT = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+
+    function updateHud() {
+        if (!hudInited || !simSub.hudOn) return;
+
+        drawDialGauge('g-rudder',      simSub.rudder.actual,      -35, 35, 'TIM');
+        drawDialGauge('g-bowplanes',   simSub.bowPlanes.actual,   -25, 25, 'PR');
+        drawDialGauge('g-sternplanes', simSub.sternPlanes.actual, -25, 25, 'PP');
+        drawDialGauge('g-depth',       simSub.depth,                0, 300, 'PRF', true);
+        drawDialGauge('g-speed',       Math.abs(simSub.speed),      0,  20, 'VEL');
+        drawCompass  ('g-compass',     simSub.heading);
+
+        setT('v-rudder',      fmtSigned(simSub.rudder.actual, '°'));
+        setT('v-bowplanes',   fmtSigned(simSub.bowPlanes.actual, '°'));
+        setT('v-sternplanes', fmtSigned(simSub.sternPlanes.actual, '°'));
+        setT('v-depth',       simSub.depth.toFixed(1) + ' m');
+        setT('v-speed',       Math.abs(simSub.speed).toFixed(1) + ' kn');
+        setT('v-compass',     String(Math.round(simSub.heading)).padStart(3,'0') + '°');
+
+        setT('hud-hdg',   String(Math.round(simSub.heading)).padStart(3,'0') + '°');
+        setT('hud-depth', simSub.depth.toFixed(1) + ' m');
+        setT('hud-speed', Math.abs(simSub.speed).toFixed(1) + ' kn');
+        setT('hud-pos',   fmtLatLon(simSub.position.lat, simSub.position.lon));
+        setT('hud-press', simSub.pressure.toFixed(2) + ' bar');
+        setT('hud-o2',    simSub.o2.toFixed(1) + '%');
+        setT('hud-co2',   simSub.co2.toFixed(2) + '%');
+        setT('hud-temp',  simSub.temp.toFixed(0));
+        setT('hud-hum',   simSub.humidity.toFixed(0));
+        const co2El = document.getElementById('hud-co2');
+        if (co2El) co2El.className = simSub.co2 > 0.3 ? 'hud-val hud-warn' : 'hud-val';
+        const o2El = document.getElementById('hud-o2');
+        if (o2El) o2El.className = simSub.o2 < 19 ? 'hud-val hud-warn' : 'hud-val';
+
+        // Propulsión
+        document.getElementById('led-aip').className    = 'led ' + (simSub.aipOn ? 'on' : 'off');
+        document.getElementById('led-diesel').className = 'led ' + (simSub.dieselOn ? 'on' : 'off');
+        document.getElementById('led-batt').className   = 'led ' + (simSub.battery > 25 ? 'on' : (simSub.battery > 10 ? 'warn' : 'err'));
+        document.getElementById('led-snork').className  = 'led ' + (simSub.snorkel ? 'on' : 'off');
+        setT('aip-status',    simSub.aipOn ? 'EN LÍNEA' : 'PARADO');
+        setT('diesel-status', simSub.dieselOn ? Math.round(simSub.dieselRpm) + ' rpm' : 'PARADO');
+        setT('batt-status',   simSub.batteryDir === 'charge' ? 'CARGANDO' : 'DESCARGA');
+        setT('snork-status',  simSub.snorkel ? 'IZADO' : 'BAJO');
+        setT('v-batt',        simSub.battery.toFixed(1) + '%');
+        setT('v-motor-rpm',   Math.round(simSub.motorRpm.actual) + ' rpm');
+        setT('v-shaft-pwr',   Math.round(simSub.shaftPower) + ' kW');
+        setT('v-lox',         simSub.loxPct.toFixed(1) + '%');
+        setT('v-etoh',        simSub.etohPct.toFixed(0) + '%');
+
+        // Tanques
+        ['mbt1','mbt2','mbt3','mbt4','mbt5'].forEach((n,i) => updateTank('t-'+n, simSub.mbt[i]));
+        updateTank('t-tfwd', simSub.trimFwd);
+        updateTank('t-taft', simSub.trimAft);
+        updateTank('t-neg',  simSub.neg);
+        updateTank('t-aux',  simSub.aux);
+
+        // Contactos
+        const cl = document.getElementById('contacts-list');
+        if (cl) {
+            cl.innerHTML = simSub.contacts.map(c => {
+                const brg = String(Math.round(c.bearing)).padStart(3,'0');
+                return '<div class="contact-row"><span>' +
+                       c.id + ' · B' + brg + '° · R' + c.range.toFixed(1) + 'nm · ' + c.speed.toFixed(1) + 'kn</span>' +
+                       '<span class="ctype">' + c.classification + '</span></div>';
+            }).join('');
+        }
+
+        // FC
+        const openTube = simSub.tubes.findIndex(t => t.state === 'OPEN');
+        setT('fc-tube', openTube >= 0 ? ('T' + (openTube+1)) : 'ninguno');
+        const target = simSub.contacts[1];
+        if (target) {
+            setT('fc-target', target.id + ' · ' + target.classification);
+            setT('fc-solution', 'B' + String(Math.round(target.bearing)).padStart(3,'0') +
+                                '° R' + target.range.toFixed(1) + 'nm');
+        }
+
+        // Sonar waterfall (10 Hz)
+        simSub.sonarTime += 0.016;
+        if (simSub.sonarTime >= 0.1) {
+            simSub.sonarTime = 0;
+            drawSonar();
+        }
+    }
+
+    function updateTank(id, pct) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const fill = el.querySelector('.tank-fill');
+        const pctEl = el.querySelector('.tank-pct');
+        if (fill) fill.style.height = pct + '%';
+        if (pctEl) pctEl.textContent = Math.round(pct) + '%';
+    }
+
+    function drawDialGauge(canvasId, value, min, max, label, redZone = false) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+        const cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 4;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#0a1418';
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#3a8a5a'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+        const start = -Math.PI * 1.25, end = Math.PI * 0.25;
+        const range = end - start;
+        ctx.strokeStyle = '#5fa080'; ctx.lineWidth = 1;
+        const ticks = 11;
+        for (let i = 0; i < ticks; i++) {
+            const a = start + range * (i / (ticks - 1));
+            const isMaj = (i === 0 || i === 5 || i === 10);
+            ctx.beginPath();
+            ctx.moveTo(cx + Math.cos(a) * (r-2), cy + Math.sin(a) * (r-2));
+            ctx.lineTo(cx + Math.cos(a) * (r - (isMaj ? 11 : 6)), cy + Math.sin(a) * (r - (isMaj ? 11 : 6)));
+            ctx.stroke();
+        }
+        if (redZone) {
+            ctx.strokeStyle = '#aa3030'; ctx.lineWidth = 3.5;
+            ctx.beginPath(); ctx.arc(cx, cy, r-4, start + range*0.83, end); ctx.stroke();
+        }
+        // Center min/mid/max labels
+        ctx.fillStyle = '#5a9070'; ctx.font = '8px Consolas';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(min), cx + Math.cos(start) * (r-16), cy + Math.sin(start) * (r-16));
+        ctx.fillText(String(max), cx + Math.cos(end)   * (r-16), cy + Math.sin(end)   * (r-16));
+        // Needle
+        const t = (value - min) / (max - min);
+        const a = start + range * Math.max(0, Math.min(1, t));
+        ctx.strokeStyle = '#ffd54a'; ctx.lineWidth = 2.2;
+        ctx.shadowColor = '#ffd54a'; ctx.shadowBlur = 4;
+        ctx.beginPath();
+        ctx.moveTo(cx - Math.cos(a) * 5, cy - Math.sin(a) * 5);
+        ctx.lineTo(cx + Math.cos(a) * (r - 9), cy + Math.sin(a) * (r - 9));
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        // Hub
+        ctx.fillStyle = '#ffd54a';
+        ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI*2); ctx.fill();
+        // Label
+        ctx.fillStyle = '#6fdca0'; ctx.font = 'bold 9px Consolas';
+        ctx.fillText(label, cx, cy + r - 14);
+    }
+
+    function drawCompass(canvasId, heading) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+        const cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 4;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#0a1418';
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#3a8a5a'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(-heading * Math.PI / 180);
+        const cards = ['N','E','S','O'];
+        ctx.font = 'bold 12px Consolas';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        cards.forEach((c, i) => {
+            ctx.fillStyle = (c === 'N') ? '#ff4040' : '#ffd54a';
+            const a = i * Math.PI / 2 - Math.PI/2;
+            ctx.fillText(c, Math.cos(a) * (r-13), Math.sin(a) * (r-13));
+        });
+        ctx.strokeStyle = '#5fa080'; ctx.lineWidth = 1;
+        for (let deg = 0; deg < 360; deg += 30) {
+            const a = (deg - 90) * Math.PI / 180;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * (r-2), Math.sin(a) * (r-2));
+            ctx.lineTo(Math.cos(a) * (r - (deg % 90 === 0 ? 9 : 5)),
+                       Math.sin(a) * (r - (deg % 90 === 0 ? 9 : 5)));
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // Pointer rojo arriba (lubber line)
+        ctx.fillStyle = '#ff4040';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - r + 1);
+        ctx.lineTo(cx - 4, cy - r + 9);
+        ctx.lineTo(cx + 4, cy - r + 9);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ffd54a'; ctx.font = 'bold 11px Consolas';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(Math.round(heading)).padStart(3,'0'), cx, cy);
+    }
+
+    function drawSonar() {
+        const canvas = document.getElementById('sonar-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+        // Scroll down 1px
+        const img = ctx.getImageData(0, 0, w, h - 1);
+        ctx.putImageData(img, 0, 1);
+        // Draw new top row
+        ctx.fillStyle = '#001408';
+        ctx.fillRect(0, 0, w, 1);
+        // Background noise
+        for (let x = 0; x < w; x++) {
+            const v = (Math.random() * 35) | 0;
+            ctx.fillStyle = 'rgb(0,' + v + ',' + ((v*0.5)|0) + ')';
+            ctx.fillRect(x, 0, 1, 1);
+        }
+        // Contactos
+        simSub.contacts.forEach(c => {
+            const x = (c.bearing / 360) * w;
+            const color = c.confidence === 'HI'  ? 'rgb(140,255,140)'
+                        : c.confidence === 'MID' ? 'rgb(120,210,90)'
+                                                 : 'rgb(80,150,40)';
+            ctx.fillStyle = color;
+            ctx.fillRect(x - 1, 0, 3, 1);
+        });
+    }
+
+    function setHudVisible(on) {
+        simSub.hudOn = on;
+        document.getElementById('cockpit-hud').classList.toggle('hidden', !on);
+        document.getElementById('info-panel').style.display = on ? 'none' : 'block';
+        document.getElementById('controls').style.display   = on ? 'none' : 'grid';
+        document.getElementById('vcontrols').style.display  = on ? 'none' : 'grid';
+        document.getElementById('hudToggleBtn').textContent = 'Cockpit HUD: ' + (on ? 'ON' : 'OFF');
+    }
+
+    // ===================== INIT =====================
+    function init() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x06203a);
+        scene.fog = new THREE.FogExp2(0x06203a, 0.0035);
+
+        camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.05, 2000);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(innerWidth, innerHeight);
+        renderer.setPixelRatio(devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        setupLighting();
+        buildEnvironment();
+
+        const sub = new THREE.Group();
+        sub.name = 'S80';
+        scene.add(sub);
+
+        loadControlRoomTexture();
+        loadInteriorPhotos(sub);
+
+        buildHullExterior(sub);
+        buildSail(sub);
+        buildSternFeatures(sub);
+        buildBowFeatures(sub);
+        buildHullDetails(sub);
+
+        buildInteriorBase(sub);
+        buildEngineRoom(sub);
+        buildAIPRoom(sub);
+        buildCrewQuarters(sub);
+        buildControlRoom(sub);
+        buildOfficerQuarters(sub);
+        buildTorpedoRoom(sub);
+
+        spawnPlayer();
+        setupControls();
+        initHud();
+        setHudVisible(true);
+        animate();
+        addLog('Submarino listo. Click para mirar con ratón.');
+    }
+
+    // ===================== LUCES Y ENTORNO =====================
+    function setupLighting() {
+        scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+
+        const sun = new THREE.DirectionalLight(0xfff5e1, 0.8);
+        sun.position.set(60, 120, 80);
+        scene.add(sun);
+
+        scene.add(new THREE.HemisphereLight(0x88ccff, 0x002244, 0.45));
+
+        // Luces interiores cálidas en cada compartimento (point lights al techo)
+        COMPARTMENTS.forEach(c => {
+            const cx = (c.x0 + c.x1) / 2;
+            const cnt = Math.max(2, Math.round((c.x1 - c.x0) / 5));
+            for (let i = 0; i < cnt; i++) {
+                const x = c.x0 + (i + 0.5) * (c.x1 - c.x0) / cnt;
+                const pl = new THREE.PointLight(0xfff0c8, 0.35, 8, 2);
+                pl.position.set(x, CEIL_Y - 0.05, 0);
+                scene.add(pl);
+            }
+        });
+
+        // Luz roja tenue del CIC (modo combate)
+        const cicRed = new THREE.PointLight(0xff3322, 0.15, 6, 2);
+        cicRed.position.set(SAIL_X, 0.4, 1.5);
+        scene.add(cicRed);
+    }
+
+    function buildEnvironment() {
+        // Superficie del mar (semitransparente, ligeramente irregular)
+        const seaGeo = new THREE.PlaneGeometry(800, 800, 48, 48);
+        const positions = seaGeo.attributes.position;
+        for (let i = 0; i < positions.count; i++) {
+            positions.setZ(i, (Math.random() - 0.5) * 0.3);
+        }
+        positions.needsUpdate = true;
+        seaGeo.computeVertexNormals();
+        const sea = new THREE.Mesh(seaGeo, mat(0x1c5a99, {
+            transparent: true, opacity: 0.55, shininess: 90, specular: 0x88aacc
+        }));
+        sea.rotation.x = -Math.PI / 2;
+        sea.position.y = 18;
+        scene.add(sea);
+
+        // Lecho marino arenoso
+        const seabed = new THREE.Mesh(
+            new THREE.PlaneGeometry(800, 800),
+            mat(0x0a1c30)
+        );
+        seabed.rotation.x = -Math.PI / 2;
+        seabed.position.y = -25;
+        scene.add(seabed);
+    }
+
+    // ===================== EXTERIOR =====================
+    function buildHullExterior(parent) {
+        // Material casco con textura procedural de losetas anecoicas
+        const anechoicTex = makeCanvasTexture(512, 256, (ctx, w, h) => {
+            ctx.fillStyle = '#1a1f25'; ctx.fillRect(0, 0, w, h);
+            const tile = 14;
+            for (let y = 0; y < h; y += tile) {
+                for (let x = 0; x < w; x += tile) {
+                    const v = 26 + (Math.random() * 12 | 0);
+                    ctx.fillStyle = `rgb(${v},${v+2},${v+5})`;
+                    ctx.fillRect(x + 1, y + 1, tile - 2, tile - 2);
+                }
+            }
+        });
+        anechoicTex.wrapS = anechoicTex.wrapT = THREE.RepeatWrapping;
+        anechoicTex.repeat.set(20, 4);
+
+        hullMaterial = new THREE.MeshPhongMaterial({
+            color: 0x2a3038, map: anechoicTex,
+            transparent: true, opacity: 0.4,
+            shininess: 30, side: THREE.DoubleSide
+        });
+
+        // Casco principal cilíndrico (hueco para que se vea el interior)
+        const hullGeo = new THREE.CylinderGeometry(HULL_RADIUS, HULL_RADIUS, HULL_LENGTH - 18, 64, 1, true);
+        const hull = new THREE.Mesh(hullGeo, hullMaterial);
+        hull.rotation.z = Math.PI / 2;
+        hull.position.x = -1; // ligero desplaza para alinear con bóvedas
+        parent.add(hull);
+
+        // Proa: cono ojival (esfera estirada)
+        const bowGeo = new THREE.SphereGeometry(HULL_RADIUS, 32, 24, 0, Math.PI * 2, 0, Math.PI / 2);
+        const bow = new THREE.Mesh(bowGeo, hullMaterial);
+        bow.rotation.z = -Math.PI / 2;
+        bow.position.x = HALF_L - 9;
+        bow.scale.set(1, 2.2, 1);
+        parent.add(bow);
+
+        // Popa cónica
+        const sternGeo = new THREE.CylinderGeometry(HULL_RADIUS, HULL_RADIUS * 0.55, 9, 32, 1, true);
+        const stern = new THREE.Mesh(sternGeo, hullMaterial);
+        stern.rotation.z = Math.PI / 2;
+        stern.position.x = -HALF_L + 4.5;
+        parent.add(stern);
+
+        // Cono final
+        const tailGeo = new THREE.ConeGeometry(HULL_RADIUS * 0.55, 4, 24, 1, true);
+        const tail = new THREE.Mesh(tailGeo, hullMaterial);
+        tail.rotation.z = Math.PI / 2;
+        tail.position.x = -HALF_L + 1;
+        parent.add(tail);
+
+        // Cuaderna superior (deck-house), franja plana en el dorso del casco
+        const deck = new THREE.Mesh(
+            new THREE.BoxGeometry(60, 0.15, 1.6),
+            mat(0x1a1f25)
+        );
+        deck.position.set(0, HULL_RADIUS - 0.05, 0);
+        parent.add(deck);
+
+        // Aberturas free-flood (orificios alineados a popa)
+        const ffMat = mat(0x000000);
+        for (let i = 0; i < 12; i++) {
+            const x = -25 + i * 1.5;
+            const ff = new THREE.Mesh(new THREE.CircleGeometry(0.1, 12), ffMat);
+            ff.position.set(x, HULL_RADIUS - 0.5, 1.2);
+            ff.rotation.y = -Math.PI / 2;
+            parent.add(ff);
+            const ff2 = ff.clone();
+            ff2.position.z = -1.2;
+            ff2.rotation.y = Math.PI / 2;
+            parent.add(ff2);
+        }
+    }
+
+    function buildSail(parent) {
+        const sailMat = mat(0x1a1f25, { shininess: 40 });
+
+        // Cuerpo principal de la vela (forma ahusada)
+        const sailGeo = new THREE.BoxGeometry(11, 4.2, 1.7);
+        const sail = new THREE.Mesh(sailGeo, sailMat);
+        sail.position.set(SAIL_X, HULL_RADIUS + 2.1, 0);
+        parent.add(sail);
+
+        // Bordes redondeados
+        const edgeGeo = new THREE.CylinderGeometry(0.85, 0.85, 4.2, 24);
+        const eF = new THREE.Mesh(edgeGeo, sailMat);
+        eF.position.set(SAIL_X + 5.5, HULL_RADIUS + 2.1, 0);
+        parent.add(eF);
+        const eB = eF.clone();
+        eB.position.x = SAIL_X - 5.5;
+        parent.add(eB);
+
+        // Techo de la vela (con hueco de cofa)
+        const top = new THREE.Mesh(
+            new THREE.BoxGeometry(12.5, 0.15, 1.7),
+            sailMat
+        );
+        top.position.set(SAIL_X, HULL_RADIUS + 4.25, 0);
+        parent.add(top);
+
+        // Cofa (puente abierto en lo alto)
+        const bridgeWell = new THREE.Mesh(
+            new THREE.BoxGeometry(2.2, 0.6, 1.2),
+            mat(0x0a0d10)
+        );
+        bridgeWell.position.set(SAIL_X - 1.5, HULL_RADIUS + 4.0, 0);
+        parent.add(bridgeWell);
+        // Parabrisas
+        box(parent, SAIL_X - 0.4, HULL_RADIUS + 4.5, 0, 0.05, 0.6, 1.2, 0x88aacc, { transparent:true, opacity:0.4 });
+
+        // Mástiles / periscopios sobre la vela
+        const mastMat = mat(0x0d0d0d, { shininess: 80 });
+        const mastShinyMat = mat(0x444, { shininess: 100 });
+
+        // Periscopio óptico
+        const perOpt = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 5.2, 12), mastShinyMat);
+        perOpt.position.set(SAIL_X + 0.5, HULL_RADIUS + 6.6, 0);
+        parent.add(perOpt);
+        // Cabeza del periscopio
+        const perHead = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.5), mastMat);
+        perHead.position.set(SAIL_X + 0.5, HULL_RADIUS + 9.4, 0);
+        parent.add(perHead);
+
+        // Mástil ESM
+        const esm = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 5.5, 10), mastMat);
+        esm.position.set(SAIL_X - 1.5, HULL_RADIUS + 6.8, 0);
+        parent.add(esm);
+        const esmHead = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 8), mastMat);
+        esmHead.position.set(SAIL_X - 1.5, HULL_RADIUS + 9.7, 0);
+        parent.add(esmHead);
+
+        // Snorkel
+        const snork = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 4.5, 10), mastMat);
+        snork.position.set(SAIL_X - 3.4, HULL_RADIUS + 6.3, 0);
+        parent.add(snork);
+        const snorkHead = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.4, 0.5), mastMat);
+        snorkHead.position.set(SAIL_X - 3.4, HULL_RADIUS + 8.7, 0);
+        parent.add(snorkHead);
+
+        // Antena comm
+        const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 6, 8), mastMat);
+        ant.position.set(SAIL_X + 2.5, HULL_RADIUS + 7.0, 0);
+        parent.add(ant);
+
+        // Aletas de buceo de proa (sobre la vela)
+        const planeMat = mat(0x1a1f25);
+        const fwdL = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.18, 5.5), planeMat);
+        fwdL.position.set(SAIL_X, HULL_RADIUS + 1.7, 3.5);
+        parent.add(fwdL);
+        const fwdR = fwdL.clone();
+        fwdR.position.z = -3.5;
+        parent.add(fwdR);
+
+        // Placa "S-81" en la vela
+        const plateTex = makeCanvasTexture(256, 128, (ctx) => {
+            ctx.fillStyle = '#1a1f25'; ctx.fillRect(0, 0, 256, 128);
+            ctx.fillStyle = '#e8e8e8'; ctx.font = 'bold 80px Arial';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('S-81', 128, 64);
+        });
+        const plate = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.4, 1.1),
+            new THREE.MeshBasicMaterial({ map: plateTex })
+        );
+        plate.position.set(SAIL_X - 3, HULL_RADIUS + 2.2, 0.86);
+        parent.add(plate);
+        const plate2 = plate.clone();
+        plate2.position.z = -0.86;
+        plate2.rotation.y = Math.PI;
+        parent.add(plate2);
+
+        // Bandera española (rectangular)
+        const flagTex = makeCanvasTexture(128, 64, (ctx) => {
+            ctx.fillStyle = '#aa151b'; ctx.fillRect(0, 0, 128, 16);
+            ctx.fillStyle = '#f1bf00'; ctx.fillRect(0, 16, 128, 32);
+            ctx.fillStyle = '#aa151b'; ctx.fillRect(0, 48, 128, 16);
+        });
+        const flag = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.2, 0.6),
+            new THREE.MeshBasicMaterial({ map: flagTex, side: THREE.DoubleSide })
+        );
+        flag.position.set(SAIL_X + 4.2, HULL_RADIUS + 3.5, 0.86);
+        parent.add(flag);
+    }
+
+    function buildSternFeatures(parent) {
+        const rudMat = mat(0x1a1f25);
+
+        // Timones en X (4 aletas a 45°, 135°, 225°, 315°)
+        const xRudGeo = new THREE.BoxGeometry(5, 0.25, 5.5);
+        for (let i = 0; i < 4; i++) {
+            const ang = Math.PI / 4 + i * Math.PI / 2;
+            const r = new THREE.Mesh(xRudGeo, rudMat);
+            r.position.set(-HALF_L + 6, 0, 0);
+            r.rotation.x = ang;
+            r.position.y = Math.cos(ang) * (HULL_RADIUS + 1.7);
+            r.position.z = Math.sin(ang) * (HULL_RADIUS + 1.7);
+            parent.add(r);
+        }
+
+        // Eje de la hélice
+        const shaft = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.25, 0.25, 5, 12),
+            mat(0x666, { shininess: 100 })
+        );
+        shaft.rotation.z = Math.PI / 2;
+        shaft.position.set(-HALF_L - 0.5, 0, 0);
+        parent.add(shaft);
+
+        // Hélice (7 palas)
+        propeller = new THREE.Group();
+        propeller.position.set(-HALF_L - 3, 0, 0);
+        const hub = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.5, 0.3, 1, 16),
+            mat(0x886633, { shininess: 90 })
+        );
+        hub.rotation.z = Math.PI / 2;
+        propeller.add(hub);
+        const bladeMat = mat(0xa07040, { shininess: 90 });
+        for (let i = 0; i < 7; i++) {
+            const blade = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.5, 0.7), bladeMat);
+            blade.position.y = 1.3;
+            const pivot = new THREE.Group();
+            pivot.add(blade);
+            pivot.rotation.x = (i / 7) * Math.PI * 2;
+            pivot.rotation.z = 0.4;
+            propeller.add(pivot);
+        }
+        parent.add(propeller);
+
+        // Cono trasero del eje
+        const rearCone = new THREE.Mesh(
+            new THREE.ConeGeometry(0.45, 0.9, 16),
+            mat(0x886633, { shininess: 90 })
+        );
+        rearCone.rotation.z = -Math.PI / 2;
+        rearCone.position.set(-HALF_L - 3.7, 0, 0);
+        parent.add(rearCone);
+
+        // Carenado del array remolcado
+        const ta = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.18, 0.18, 1.5, 8),
+            mat(0x222)
+        );
+        ta.rotation.z = Math.PI / 2;
+        ta.position.set(-HALF_L + 5, -HULL_RADIUS - 0.2, 1.5);
+        parent.add(ta);
+    }
+
+    function buildBowFeatures(parent) {
+        // Domo sonar (esfera ligeramente translúcida en proa)
+        const dome = new THREE.Mesh(
+            new THREE.SphereGeometry(2.9, 24, 16),
+            mat(0x2a323a, { transparent: true, opacity: 0.5 })
+        );
+        dome.position.set(HALF_L - 6, 0, 0);
+        parent.add(dome);
+
+        // Tubos de torpedos exteriores (6, dispuestos en racimo)
+        const tubeMat = mat(0x444);
+        const positions = [
+            [0.95, 1.3], [0.95, -1.3],
+            [-0.95, 1.3], [-0.95, -1.3],
+            [0, 1.7], [0, -1.7]
+        ];
+        positions.forEach(([y, z]) => {
+            const tube = new THREE.Mesh(new THREE.CircleGeometry(0.45, 16), tubeMat);
+            tube.position.set(HALF_L - 4, y, z);
+            tube.rotation.y = Math.PI / 2;
+            parent.add(tube);
+        });
+
+        // Anclajes / cleats sobre la cubierta
+        for (let i = 0; i < 5; i++) {
+            const c = new THREE.Mesh(
+                new THREE.BoxGeometry(0.25, 0.15, 0.4),
+                mat(0x111)
+            );
+            c.position.set(HALF_L - 8 - i * 6, HULL_RADIUS + 0.05, 0);
+            parent.add(c);
+        }
+    }
+
+    function buildHullDetails(parent) {
+        // Escotilla de salvamento sobre el casco (anillo)
+        const ring = new THREE.Mesh(
+            new THREE.TorusGeometry(0.9, 0.08, 8, 24),
+            mat(0x111)
+        );
+        ring.position.set(-15, HULL_RADIUS, 0);
+        ring.rotation.x = Math.PI / 2;
+        parent.add(ring);
+
+        const ring2 = ring.clone();
+        ring2.position.x = SAIL_X - 7.5;
+        parent.add(ring2);
+    }
+
+    // ===================== INTERIOR ESTRUCTURA =====================
+    function buildInteriorBase(parent) {
+        // Suelo (rejilla metálica)
+        const floorTex = makeCanvasTexture(256, 256, (ctx) => {
+            ctx.fillStyle = '#3a4048'; ctx.fillRect(0, 0, 256, 256);
+            ctx.strokeStyle = '#1f2429'; ctx.lineWidth = 2;
+            for (let i = 0; i < 8; i++) {
+                ctx.beginPath(); ctx.moveTo(i*32, 0); ctx.lineTo(i*32, 256); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i*32); ctx.lineTo(256, i*32); ctx.stroke();
+            }
+            ctx.fillStyle = '#2a3038';
+            for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++)
+                ctx.fillRect(x*32+12, y*32+12, 8, 8);
+        });
+        floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+        floorTex.repeat.set(40, 2);
+
+        const floor = new THREE.Mesh(
+            new THREE.BoxGeometry(HULL_LENGTH - 14, 0.18, HULL_RADIUS * 1.85),
+            new THREE.MeshPhongMaterial({ map: floorTex, color: 0xaaaaaa })
+        );
+        floor.position.y = FLOOR_Y - 0.09;
+        parent.add(floor);
+
+        // Techo (paneles)
+        const ceiling = box(parent, 0, CEIL_Y + 0.05, 0,
+            HULL_LENGTH - 14, 0.1, HULL_RADIUS * 1.7, 0x2a3038);
+
+        // Tubos de cables y conductos en el techo (varios colores)
+        const colors = [0xc04020, 0xddaa20, 0x2080d0, 0x559955];
+        for (let i = 0; i < 4; i++) {
+            cyl(parent, 0, CEIL_Y - 0.15 - i*0.12, -1.4 + i*0.25,
+                0.08, 0.08, HULL_LENGTH - 16, colors[i], 'x');
+        }
+        // Otra batería de tubos en el otro lado
+        for (let i = 0; i < 3; i++) {
+            cyl(parent, 0, CEIL_Y - 0.15 - i*0.12, 1.4 - i*0.25,
+                0.07, 0.07, HULL_LENGTH - 16, [0x88aa55, 0xcc6633, 0x444444][i], 'x');
+        }
+
+        // Mamparos entre compartimentos
+        for (let i = 1; i < COMPARTMENTS.length; i++) {
+            const x = COMPARTMENTS[i].x0;
+            // Mampara en forma de octógono (representando el casco circular)
+            const wall = new THREE.Mesh(
+                new THREE.BoxGeometry(0.18, HULL_RADIUS * 1.85, HULL_RADIUS * 1.85),
+                mat(0x4a525a)
+            );
+            wall.position.set(x, 0.1, 0);
+            parent.add(wall);
+
+            // Hueco escotilla (anillo + puerta abierta a un lado)
+            const hatchFrame = new THREE.Mesh(
+                new THREE.TorusGeometry(0.85, 0.1, 8, 24),
+                mat(0x222)
+            );
+            hatchFrame.position.set(x, FLOOR_Y + 0.95, 0);
+            hatchFrame.rotation.y = Math.PI / 2;
+            parent.add(hatchFrame);
+
+            // Disco interior (más oscuro, simulando paso libre)
+            const hatchHole = new THREE.Mesh(
+                new THREE.CircleGeometry(0.78, 24),
+                mat(0x000)
+            );
+            hatchHole.position.set(x, FLOOR_Y + 0.95, 0);
+            hatchHole.rotation.y = Math.PI / 2;
+            parent.add(hatchHole);
+
+            // Puerta apoyada al lado
+            const door = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.78, 0.78, 0.06, 24),
+                mat(0x556068)
+            );
+            door.position.set(x + 0.05, FLOOR_Y + 0.95, 1.0);
+            door.rotation.x = Math.PI / 2;
+            door.rotation.y = 0.8;
+            parent.add(door);
+
+            // Etiqueta de compartimento
+            const labelTex = makeCanvasTexture(512, 64, (ctx) => {
+                ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, 512, 64);
+                ctx.fillStyle = '#ffe24a'; ctx.font = 'bold 28px Arial';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(COMPARTMENTS[i].name.toUpperCase(), 256, 32);
+            });
+            const label = new THREE.Mesh(
+                new THREE.PlaneGeometry(2.5, 0.32),
+                new THREE.MeshBasicMaterial({ map: labelTex })
+            );
+            label.position.set(x - 0.12, CEIL_Y - 0.4, 0);
+            label.rotation.y = -Math.PI / 2;
+            parent.add(label);
+        }
+
+        // Ducha de luz tubular cada 4m
+        for (let x = -HALF_L + 6; x < HALF_L - 6; x += 4) {
+            const lamp = new THREE.Mesh(
+                new THREE.BoxGeometry(0.8, 0.08, 0.18),
+                new THREE.MeshBasicMaterial({ color: 0xfff0c0 })
+            );
+            lamp.position.set(x, CEIL_Y - 0.02, 0);
+            parent.add(lamp);
+        }
+    }
+
+    // ===================== COMPARTIMENTOS =====================
+
+    // 1) SALA DE MOTORES (popa)
+    function buildEngineRoom(parent) {
+        const c = COMPARTMENTS[0];
+        const cx = (c.x0 + c.x1) / 2;
+
+        // Motor diésel principal (bloque grande)
+        const engine = new THREE.Group();
+        engine.position.set(cx - 2, FLOOR_Y, 0);
+        parent.add(engine);
+        // Bloque
+        box(engine, 0, 0.9, 0, 4.5, 1.6, 1.8, 0x556677);
+        // Tapa de cilindros
+        box(engine, 0, 1.85, 0, 4, 0.4, 1.5, 0x445566);
+        // Cilindros (6 en línea)
+        for (let i = 0; i < 6; i++) {
+            cyl(engine, -1.85 + i * 0.74, 2.15, 0, 0.22, 0.22, 0.6, 0x222);
+        }
+        // Tubo de escape
+        cyl(engine, 2.4, 1.4, 0.7, 0.18, 0.18, 1.2, 0x333, 'y');
+        // Bancada
+        box(engine, 0, 0.2, 0, 5, 0.3, 2.2, 0x222);
+        // Letreros / placa
+        const ePlateTex = makeCanvasTexture(256, 64, (ctx) => {
+            ctx.fillStyle = '#222'; ctx.fillRect(0, 0, 256, 64);
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('MTU 16V 396 SE84', 128, 32);
+        });
+        const ePlate = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.2, 0.3),
+            new THREE.MeshBasicMaterial({ map: ePlateTex })
+        );
+        ePlate.position.set(0, 1.2, 0.91);
+        engine.add(ePlate);
+
+        // Generador eléctrico (cilindro)
+        cyl(parent, cx + 4, FLOOR_Y + 0.7, 0, 0.7, 0.7, 2.5, 0x445, 'x');
+        box(parent, cx + 4, FLOOR_Y + 0.15, 0, 3, 0.3, 1.6, 0x222);
+
+        // Motor eléctrico de propulsión (más grande, hacia popa)
+        cyl(parent, cx - 6, FLOOR_Y + 0.95, 0, 1.1, 1.1, 2.5, 0x33444a, 'x');
+        // Eje de transmisión hacia popa
+        cyl(parent, cx - 9, FLOOR_Y + 0.95, 0, 0.18, 0.18, 4, 0x888, 'x', { shininess: 100 });
+
+        // Cuadros eléctricos en pared
+        for (let i = 0; i < 3; i++) {
+            box(parent, cx - 5 + i * 2.5, FLOOR_Y + 1.0, -2.7, 1.8, 1.8, 0.3, 0x223);
+            box(parent, cx - 5 + i * 2.5, FLOOR_Y + 1.4, -2.55, 1.5, 0.5, 0.05, 0x000);
+            // Pequeñas luces LED
+            for (let j = 0; j < 5; j++) {
+                box(parent, cx - 5.5 + i * 2.5 + j * 0.25, FLOOR_Y + 0.5, -2.55, 0.05, 0.05, 0.02,
+                    j % 2 ? 0x00ff00 : 0xff8800);
+            }
+        }
+
+        // Tuberías hidráulicas
+        cyl(parent, cx, FLOOR_Y + 2.4, -2.0, 0.1, 0.1, c.x1 - c.x0 - 1, 0x884422, 'x');
+        cyl(parent, cx, FLOOR_Y + 2.5, -1.8, 0.08, 0.08, c.x1 - c.x0 - 1, 0xddaa20, 'x');
+
+        // Válvulas (volantes rojos)
+        for (let i = 0; i < 3; i++) {
+            const valve = new THREE.Mesh(
+                new THREE.TorusGeometry(0.18, 0.04, 8, 16),
+                mat(0xcc1010)
+            );
+            valve.position.set(cx - 4 + i * 3, FLOOR_Y + 1.8, -2.6);
+            valve.rotation.y = Math.PI / 2;
+            parent.add(valve);
+        }
+    }
+
+    // 2) PLANTA AIP
+    function buildAIPRoom(parent) {
+        const c = COMPARTMENTS[1];
+        const cx = (c.x0 + c.x1) / 2;
+
+        // Reformador de bioetanol (vertical)
+        const reformer = new THREE.Group();
+        reformer.position.set(cx - 4, FLOOR_Y, -1.5);
+        parent.add(reformer);
+        cyl(reformer, 0, 1.05, 0, 0.85, 0.85, 2.1, 0x664422);
+        cyl(reformer, 0, 2.25, 0, 0.5, 0.85, 0.4, 0x664422);
+        // Etiqueta
+        const refTex = makeCanvasTexture(256, 64, (ctx) => {
+            ctx.fillStyle = '#664422'; ctx.fillRect(0, 0, 256, 64);
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('REFORMADOR BIOETANOL', 128, 32);
+        });
+        const refPlate = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.4, 0.3),
+            new THREE.MeshBasicMaterial({ map: refTex })
+        );
+        refPlate.position.set(0, 1.5, 0.86);
+        reformer.add(refPlate);
+
+        // Tanque LOX (oxígeno líquido)
+        cyl(parent, cx + 1, FLOOR_Y + 1.2, -1.5, 1.0, 1.0, 2.4, 0xddeeff, 'y', { shininess: 80 });
+        cyl(parent, cx + 1, FLOOR_Y + 2.5, -1.5, 0.3, 1.0, 0.4, 0xccddee);
+        // Etiqueta LOX
+        const loxTex = makeCanvasTexture(256, 128, (ctx) => {
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 256, 128);
+            ctx.fillStyle = '#0066cc'; ctx.font = 'bold 60px Arial';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('O₂', 128, 50);
+            ctx.font = 'bold 24px Arial';
+            ctx.fillText('LÍQUIDO', 128, 95);
+        });
+        const loxPlate = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.8, 0.5),
+            new THREE.MeshBasicMaterial({ map: loxTex })
+        );
+        loxPlate.position.set(cx + 1, FLOOR_Y + 1.5, -0.49);
+        parent.add(loxPlate);
+
+        // Pila de combustible (rectangular, lado derecho)
+        box(parent, cx, FLOOR_Y + 1.0, 1.7, 5, 1.6, 1.0, 0x445566);
+        box(parent, cx, FLOOR_Y + 1.85, 1.7, 4.7, 0.2, 0.9, 0x223344);
+        // Indicadores
+        for (let i = 0; i < 6; i++) {
+            box(parent, cx - 2 + i * 0.8, FLOOR_Y + 1.2, 1.21, 0.3, 0.3, 0.04, 0x002244);
+            box(parent, cx - 2 + i * 0.8, FLOOR_Y + 1.2, 1.20, 0.22, 0.22, 0.01, 0x00aaff);
+        }
+
+        // Tanque de bioetanol (pared izquierda)
+        cyl(parent, cx + 4, FLOOR_Y + 1.2, -2.2, 0.7, 0.7, 2.4, 0x886633, 'y');
+
+        // Tuberías criogénicas (azules, blancas) cruzando el techo
+        cyl(parent, cx, CEIL_Y - 0.4, -0.8, 0.12, 0.12, c.x1 - c.x0, 0x88aaff, 'x');
+        cyl(parent, cx, CEIL_Y - 0.4, 0.8, 0.10, 0.10, c.x1 - c.x0, 0xeeeeee, 'x');
+    }
+
+    // 3) CAMAROTES TRIPULACIÓN + COCINA
+    function buildCrewQuarters(parent) {
+        const c = COMPARTMENTS[2];
+
+        // Literas triples a babor (z negativo)
+        for (let i = 0; i < 4; i++) {
+            const x = c.x0 + 1.5 + i * 2.2;
+            buildBunkStack(parent, x, -2.0, 'left');
+        }
+
+        // Cocina a estribor (parte popa)
+        const galX = c.x0 + 2;
+        // Encimera larga
+        box(parent, galX + 1.5, FLOOR_Y + 0.45, 2.0, 4, 0.9, 0.9, 0x999999);
+        box(parent, galX + 1.5, FLOOR_Y + 0.95, 2.0, 4, 0.05, 0.85, 0xc0c0c0); // sobre acero
+        // Horno
+        box(parent, galX, FLOOR_Y + 0.45, 2.05, 1, 0.9, 0.8, 0x222);
+        box(parent, galX, FLOOR_Y + 0.65, 1.65, 0.8, 0.5, 0.05, 0x442211, { transparent:true, opacity:0.6 });
+        // Frigorífico
+        box(parent, galX + 3.5, FLOOR_Y + 0.85, 2.0, 0.9, 1.7, 0.9, 0xdddddd);
+        box(parent, galX + 3.5, FLOOR_Y + 0.85, 1.55, 0.85, 1.65, 0.02, 0xeeeeee);
+        // Fregadero
+        box(parent, galX + 1.5, FLOOR_Y + 1.0, 2.0, 0.6, 0.05, 0.4, 0x111);
+        // Grifo
+        cyl(parent, galX + 1.5, FLOOR_Y + 1.2, 2.2, 0.03, 0.03, 0.4, 0xcccccc);
+        // Armarios superiores
+        box(parent, galX + 1.5, FLOOR_Y + 1.9, 2.4, 4, 0.6, 0.4, 0x886633);
+
+        // Mesa comedor a estribor (parte proa de la cocina)
+        box(parent, c.x1 - 3, FLOOR_Y + 0.7, 2.1, 2.5, 0.06, 1.0, 0x664422);
+        // Patas
+        cyl(parent, c.x1 - 4, FLOOR_Y + 0.35, 2.1, 0.04, 0.04, 0.7, 0x333);
+        cyl(parent, c.x1 - 2, FLOOR_Y + 0.35, 2.1, 0.04, 0.04, 0.7, 0x333);
+        // Bancos
+        box(parent, c.x1 - 3, FLOOR_Y + 0.4, 1.4, 2.5, 0.06, 0.4, 0x223);
+        box(parent, c.x1 - 3, FLOOR_Y + 0.4, 2.8, 2.5, 0.06, 0.4, 0x223);
+        // Respaldos
+        box(parent, c.x1 - 3, FLOOR_Y + 0.7, 1.18, 2.5, 0.55, 0.05, 0x223);
+        box(parent, c.x1 - 3, FLOOR_Y + 0.7, 3.02, 2.5, 0.55, 0.05, 0x223);
+
+        // Pantalla TV en pared
+        box(parent, c.x1 - 3, FLOOR_Y + 1.55, -3.4, 1.2, 0.7, 0.05, 0x000);
+        box(parent, c.x1 - 3, FLOOR_Y + 1.55, -3.39, 1.1, 0.6, 0.01, 0x114488);
+
+        // Lockers personales (al fondo de las literas)
+        for (let i = 0; i < 4; i++) {
+            box(parent, c.x0 + 1.5 + i * 2.2, FLOOR_Y + 0.85, -3.2,
+                0.5, 1.65, 0.45, 0x556068);
+            box(parent, c.x0 + 1.5 + i * 2.2, FLOOR_Y + 0.85, -3.0,
+                0.45, 1.55, 0.02, 0x223);
+        }
+    }
+
+    function buildBunkStack(parent, x, zCenter, side) {
+        const sign = (side === 'left') ? -1 : 1;
+        const z = sign * Math.abs(zCenter);
+        const heights = [FLOOR_Y + 0.30, FLOOR_Y + 0.85, FLOOR_Y + 1.40];
+        heights.forEach(y => {
+            // Cama (estructura)
+            box(parent, x, y, z, 1.95, 0.06, 0.85, 0x333);
+            // Colchón
+            box(parent, x, y + 0.12, z, 1.9, 0.18, 0.78, 0x88aacc);
+            // Almohada
+            box(parent, x, y + 0.22, z + (sign > 0 ? -0.25 : 0.25), 0.5, 0.08, 0.4, 0xddddee);
+            // Manta
+            box(parent, x, y + 0.18, z + (sign > 0 ? 0.15 : -0.15), 1.4, 0.04, 0.5, 0x224466);
+            // Cortina (panel cerrado)
+            const curtain = box(parent, x, y + 0.32, z + sign * 0.45,
+                1.9, 0.55, 0.02, 0x335577, { transparent: true, opacity: 0.85 });
+            // Lámpara
+            box(parent, x - 0.8, y + 0.45, z + sign * 0.4, 0.1, 0.06, 0.05, 0xfff8aa);
+        });
+        // Marco vertical
+        cyl(parent, x - 0.9, FLOOR_Y + 1.0, z, 0.04, 0.04, 2.0, 0x222);
+        cyl(parent, x + 0.9, FLOOR_Y + 1.0, z, 0.04, 0.04, 2.0, 0x222);
+    }
+
+    // 4) SALA DE CONTROL (CIC) - REPLICA DE LA FOTO
+    function buildControlRoom(parent) {
+        const c = COMPARTMENTS[3];
+        const cx = (c.x0 + c.x1) / 2; // ~11.5
+
+        // Suelo azul característico (alfombra del CIC)
+        box(parent, cx, FLOOR_Y + 0.005, 0, c.x1 - c.x0 - 0.6, 0.02, 4, 0x1a4288);
+
+        // Dos columnas de periscopio en el centro (como en la foto)
+        const periMat = mat(0x666, { shininess: 100 });
+        const periBox = mat(0x223);
+        // Periscopio principal
+        const peri1 = new THREE.Group();
+        peri1.position.set(cx - 1.5, FLOOR_Y, 0);
+        parent.add(peri1);
+        cyl(peri1, 0, 1.05, 0, 0.18, 0.18, 2.1, 0x666, 'y', { shininess: 100 });
+        // Visor
+        box(peri1, 0, 1.5, 0.25, 0.4, 0.5, 0.4, 0x222);
+        box(peri1, 0, 1.55, 0.45, 0.3, 0.15, 0.05, 0x000); // ocular
+        // Maneras
+        cyl(peri1, -0.3, 1.4, 0.25, 0.04, 0.04, 0.4, 0x888, 'z');
+        cyl(peri1, 0.3, 1.4, 0.25, 0.04, 0.04, 0.4, 0x888, 'z');
+        // Sube hasta el techo
+        cyl(peri1, 0, 2.3, 0, 0.16, 0.16, 0.4, 0x666);
+
+        // Periscopio secundario
+        const peri2 = new THREE.Group();
+        peri2.position.set(cx + 1.5, FLOOR_Y, 0);
+        parent.add(peri2);
+        cyl(peri2, 0, 1.05, 0, 0.16, 0.16, 2.1, 0x666, 'y', { shininess: 100 });
+        box(peri2, 0, 1.5, -0.25, 0.4, 0.5, 0.4, 0x222);
+        cyl(peri2, 0, 2.3, 0, 0.14, 0.14, 0.4, 0x666);
+
+        // FILA SUPERIOR DE PUESTOS (estribor, z positivo) - como en la foto, fila de 5 sillones
+        for (let i = 0; i < 5; i++) {
+            const x = c.x0 + 2 + i * 2.2;
+            buildOperatorStation(parent, x, 1.7, 'face_minus_z');
+        }
+
+        // FILA INFERIOR DE PUESTOS (babor, z negativo) - 4-5 sillones cara a cara
+        for (let i = 0; i < 4; i++) {
+            const x = c.x0 + 2.5 + i * 2.4;
+            buildOperatorStation(parent, x, -1.7, 'face_plus_z');
+        }
+
+        // Consolas frontales (hacia proa, panel principal de mando)
+        // Aquí va la PANTALLA con la foto de la sala de control real
+        const photoGroup = new THREE.Group();
+        photoGroup.position.set(c.x1 - 0.15, 0, 0);
+        parent.add(photoGroup);
+
+        // Marco
+        box(photoGroup, 0, 0.3, 0, 0.05, 1.7, 3.0, 0x111);
+        // La pantalla con la textura
+        const photoMat = new THREE.MeshBasicMaterial({
+            color: 0xffffff, side: THREE.DoubleSide
+        });
+        const photoMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 1.5), photoMat);
+        photoMesh.position.set(-0.04, 0.3, 0);
+        photoMesh.rotation.y = -Math.PI / 2;
+        photoGroup.add(photoMesh);
+        // Cuando la textura cargue, la asignamos
+        photoMesh.userData.assignTex = (tex) => {
+            photoMat.map = tex;
+            photoMat.needsUpdate = true;
+        };
+        scene.userData.controlRoomPhotoMesh = photoMesh;
+
+        // Cartel encima de la pantalla
+        const ctrlTitleTex = makeCanvasTexture(512, 64, (ctx) => {
+            ctx.fillStyle = '#0a1424'; ctx.fillRect(0, 0, 512, 64);
+            ctx.fillStyle = '#ffd54a'; ctx.font = 'bold 28px Arial';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('SALA DE CONTROL · CIC', 256, 32);
+        });
+        const ctrlTitle = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.7, 0.34),
+            new THREE.MeshBasicMaterial({ map: ctrlTitleTex })
+        );
+        ctrlTitle.position.set(c.x1 - 0.18, 1.3, 0);
+        ctrlTitle.rotation.y = -Math.PI / 2;
+        parent.add(ctrlTitle);
+
+        // Consola del helmsman/planesman (delante de la fila babor, hacia proa)
+        const helm = new THREE.Group();
+        helm.position.set(c.x1 - 2, FLOOR_Y, 0);
+        parent.add(helm);
+        // Base
+        box(helm, 0, 0.5, 0, 1.6, 1.0, 1.4, 0x111);
+        // Panel inclinado con instrumentos
+        const panel = box(helm, 0.3, 1.1, 0, 1.0, 0.5, 1.4, 0x223);
+        panel.rotation.z = -0.4;
+        // Pantallas múltiples
+        for (let i = 0; i < 3; i++) {
+            const screen = box(helm, 0.05, 1.2, -0.5 + i * 0.5, 0.8, 0.4, 0.04, 0x002244);
+            screen.rotation.z = -0.4;
+            // Imagen del sonar/radar
+            const screenInner = box(helm, -0.005, 1.205, -0.5 + i * 0.5, 0.7, 0.32, 0.005,
+                i === 1 ? 0x44ccff : (i === 0 ? 0x00ff44 : 0xffaa00));
+            screenInner.rotation.z = -0.4;
+        }
+        // Volantes de buceo (dive plane controls)
+        const wheel1 = new THREE.Mesh(
+            new THREE.TorusGeometry(0.25, 0.04, 8, 16),
+            mat(0x111)
+        );
+        wheel1.position.set(0.5, 0.7, 0.5);
+        wheel1.rotation.y = Math.PI / 2;
+        helm.add(wheel1);
+        const wheel2 = wheel1.clone();
+        wheel2.position.z = -0.5;
+        helm.add(wheel2);
+
+        // Mesa de derrota (chart table) en el centro al fondo
+        box(parent, cx, FLOOR_Y + 0.8, 3.2, 2.5, 0.06, 1.2, 0x223);
+        box(parent, cx, FLOOR_Y + 0.85, 3.2, 2.4, 0.01, 1.1, 0x88aaff, { transparent:true, opacity:0.7 });
+    }
+
+    function buildOperatorStation(parent, x, z, facing) {
+        // Sillón estilo butaca (como en la foto, azul oscuro)
+        const chairGroup = new THREE.Group();
+        chairGroup.position.set(x, FLOOR_Y, z);
+        parent.add(chairGroup);
+
+        const chairMat = mat(0x1a2840);
+        const consoleMat = mat(0x111);
+
+        // Asiento
+        box(chairGroup, 0, 0.5, 0, 0.65, 0.15, 0.7, 0x1a2840);
+        // Respaldo
+        const back = box(chairGroup, 0, 1.0, (facing === 'face_minus_z' ? 0.32 : -0.32),
+            0.65, 0.9, 0.12, 0x1a2840);
+        // Brazos
+        box(chairGroup, 0.32, 0.7, 0, 0.08, 0.4, 0.5, 0x111);
+        box(chairGroup, -0.32, 0.7, 0, 0.08, 0.4, 0.5, 0x111);
+        // Pie del sillón
+        cyl(chairGroup, 0, 0.2, 0, 0.15, 0.18, 0.4, 0x111);
+        cyl(chairGroup, 0, 0.02, 0, 0.4, 0.4, 0.05, 0x111);
+
+        // Consola delante del sillón
+        const consZ = (facing === 'face_minus_z') ? -0.95 : 0.95;
+        const cons = new THREE.Group();
+        cons.position.set(x, FLOOR_Y, z + consZ);
+        parent.add(cons);
+
+        // Carcasa
+        box(cons, 0, 0.6, 0, 1.4, 1.2, 0.6, 0x222);
+        // Panel inclinado
+        const panel = box(cons, 0, 1.05, (facing === 'face_minus_z' ? 0.35 : -0.35),
+            1.3, 0.4, 0.5, 0x223);
+        panel.rotation.x = (facing === 'face_minus_z' ? 0.5 : -0.5);
+        // Pantalla principal (negra/azul, simula display táctico)
+        const screenColor = Math.random() < 0.3 ? 0x002211 : 0x002244;
+        const screen = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.0, 0.3),
+            new THREE.MeshBasicMaterial({ color: screenColor })
+        );
+        screen.position.copy(panel.position);
+        screen.position.z += (facing === 'face_minus_z' ? 0.26 : -0.26);
+        screen.rotation.x = (facing === 'face_minus_z' ? 0.5 - Math.PI/2 : -0.5 + Math.PI/2);
+        // Mejor: texto en la pantalla con canvas
+        const ctxTex = makeCanvasTexture(256, 96, (g) => {
+            g.fillStyle = '#001428'; g.fillRect(0, 0, 256, 96);
+            g.strokeStyle = '#00aa44'; g.lineWidth = 1;
+            for (let i = 0; i < 8; i++) {
+                g.beginPath(); g.moveTo(0, i*12); g.lineTo(256, i*12); g.stroke();
+            }
+            g.fillStyle = '#00ff88'; g.font = '10px monospace';
+            g.fillText('S-80 SUBSYS  RDY', 6, 14);
+            g.fillText('SONAR  AIR  HVAC', 6, 30);
+            g.fillText('● ● ● ● ● ● ● ●', 6, 46);
+            g.fillText('NAV: 36°N 06°W', 6, 62);
+            g.fillText('DEPTH: 110m', 6, 78);
+        });
+        const screen2 = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.0, 0.36),
+            new THREE.MeshBasicMaterial({ map: ctxTex })
+        );
+        const sgn = (facing === 'face_minus_z') ? 1 : -1;
+        screen2.position.set(0, 1.18, sgn * 0.59);
+        screen2.rotation.x = (facing === 'face_minus_z' ? 0.5 - Math.PI/2 : -0.5 + Math.PI/2);
+        cons.add(screen2);
+
+        // Teclado pequeño en la base
+        box(cons, 0, 1.21, sgn * 0.18, 0.5, 0.04, 0.2, 0x222);
+
+        // Reposapiés
+        box(cons, 0, 0.05, sgn * 0.45, 0.6, 0.05, 0.15, 0x444);
+    }
+
+    // 5) CAMAROTES OFICIALES + ASEOS
+    function buildOfficerQuarters(parent) {
+        const c = COMPARTMENTS[4];
+
+        // Camarotes individuales (más amplios que los de tripulación)
+        // 3 camarotes a babor
+        for (let i = 0; i < 3; i++) {
+            const x = c.x0 + 1.5 + i * 2.5;
+            // Litera doble
+            box(parent, x, FLOOR_Y + 0.45, -2.0, 1.95, 0.4, 0.85, 0x223344);
+            box(parent, x, FLOOR_Y + 0.7, -2.0, 1.9, 0.18, 0.8, 0xaaccdd);
+            box(parent, x, FLOOR_Y + 0.78, -2.3, 0.5, 0.08, 0.4, 0xeeeeee);
+            // Escritorio plegable
+            box(parent, x, FLOOR_Y + 1.2, -2.85, 0.7, 0.05, 0.4, 0x664422);
+            // Lámpara
+            cyl(parent, x, FLOOR_Y + 1.6, -2.85, 0.05, 0.05, 0.3, 0x444);
+            // Tabique entre camarotes
+            if (i < 2) {
+                box(parent, x + 1.25, FLOOR_Y + 1.0, -2.0, 0.04, 1.8, 1.5, 0x556068);
+            }
+        }
+
+        // Camarote del Comandante (más grande, a estribor parte popa)
+        box(parent, c.x0 + 2.5, FLOOR_Y + 0.45, 2.0, 2.5, 0.4, 0.85, 0x223344);
+        box(parent, c.x0 + 2.5, FLOOR_Y + 0.7, 2.0, 2.4, 0.18, 0.8, 0xaaccdd);
+        // Almohada
+        box(parent, c.x0 + 1.8, FLOOR_Y + 0.78, 2.0, 0.5, 0.08, 0.4, 0xeeeeee);
+        // Mesa con silla
+        box(parent, c.x0 + 4.5, FLOOR_Y + 0.7, 2.5, 1.0, 0.05, 0.6, 0x553311);
+        cyl(parent, c.x0 + 4.5, FLOOR_Y + 0.35, 2.5, 0.04, 0.04, 0.7, 0x111);
+        // Silla
+        box(parent, c.x0 + 4.5, FLOOR_Y + 0.45, 2.0, 0.5, 0.06, 0.5, 0x222);
+        box(parent, c.x0 + 4.5, FLOOR_Y + 0.85, 1.78, 0.5, 0.7, 0.05, 0x222);
+        // Cartel "COMANDANTE"
+        const cmdTex = makeCanvasTexture(256, 64, (ctx) => {
+            ctx.fillStyle = '#1a1f25'; ctx.fillRect(0,0,256,64);
+            ctx.fillStyle = '#ffd54a'; ctx.font = 'bold 24px Arial';
+            ctx.textAlign='center'; ctx.textBaseline='middle';
+            ctx.fillText('COMANDANTE', 128, 32);
+        });
+        const cmdSign = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.8, 0.18),
+            new THREE.MeshBasicMaterial({ map: cmdTex })
+        );
+        cmdSign.position.set(c.x0 + 1.5, FLOOR_Y + 1.7, 0);
+        cmdSign.rotation.y = -Math.PI / 2;
+        parent.add(cmdSign);
+
+        // Aseo (cabina compacta a estribor)
+        box(parent, c.x1 - 1, FLOOR_Y + 1.0, 2.2, 1.5, 1.9, 1.2, 0x99aabb,
+            { transparent:true, opacity:0.4 });
+        // WC
+        box(parent, c.x1 - 1, FLOOR_Y + 0.3, 2.6, 0.5, 0.5, 0.4, 0xeeeeee);
+        // Lavabo
+        box(parent, c.x1 - 1.5, FLOOR_Y + 0.85, 1.9, 0.5, 0.1, 0.4, 0xeeeeee);
+        cyl(parent, c.x1 - 1.5, FLOOR_Y + 1.2, 1.85, 0.02, 0.02, 0.3, 0xcccccc);
+
+        // Wardroom: pequeña mesa de oficiales en centro
+        box(parent, (c.x0+c.x1)/2, FLOOR_Y + 0.7, 0.3, 1.5, 0.05, 0.7, 0x553311);
+        cyl(parent, (c.x0+c.x1)/2 - 0.6, FLOOR_Y + 0.35, 0.3, 0.04, 0.04, 0.7, 0x222);
+        cyl(parent, (c.x0+c.x1)/2 + 0.6, FLOOR_Y + 0.35, 0.3, 0.04, 0.04, 0.7, 0x222);
+    }
+
+    // 6) SALA DE TORPEDOS (PROA)
+    function buildTorpedoRoom(parent) {
+        const c = COMPARTMENTS[5];
+        const cx = (c.x0 + c.x1) / 2;
+
+        const torpMat = mat(0x44a064, { shininess: 80 });
+        const tipMat = mat(0xddaa44, { shininess: 80 });
+
+        // 6 torpedos en racks (3 a babor, 3 a estribor)
+        const torpedoPositions = [
+            [c.x1 - 4, -0.3, -1.6], [c.x1 - 4, 0.4, -1.6], [c.x1 - 4, 1.1, -1.6],
+            [c.x1 - 4,  -0.3, 1.6], [c.x1 - 4,  0.4, 1.6], [c.x1 - 4,  1.1, 1.6]
+        ];
+        torpedoPositions.forEach(([x, y, z]) => {
+            // Cuerpo
+            const t = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 5.5, 16), torpMat);
+            t.rotation.z = Math.PI / 2;
+            t.position.set(x, y, z);
+            parent.add(t);
+            // Punta (cabeza de combate)
+            const head = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.7, 16), tipMat);
+            head.rotation.z = -Math.PI / 2;
+            head.position.set(x + 3.1, y, z);
+            parent.add(head);
+            // Aletas en la cola
+            for (let i = 0; i < 4; i++) {
+                const fin = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.04), mat(0x335544));
+                fin.position.set(x - 2.6, y, z);
+                fin.rotation.x = i * Math.PI / 2;
+                parent.add(fin);
+            }
+            // Hélice
+            cyl(parent, x - 2.95, y, z, 0.18, 0.08, 0.2, 0x886633, 'x');
+            // Etiqueta
+            box(parent, x - 1, y, z + (z > 0 ? -0.32 : 0.32), 0.4, 0.08, 0.01, 0xffe24a);
+            // Soporte rack
+            cyl(parent, x - 2, y - 0.32, z, 0.04, 0.04, 0.1, 0x222);
+            cyl(parent, x + 2, y - 0.32, z, 0.04, 0.04, 0.1, 0x222);
+        });
+
+        // Tubos de torpedos (6, hacia proa) - puertas internas
+        const tubePositions = [
+            [0.95, 1.3], [0.95, -1.3],
+            [-0.95, 1.3], [-0.95, -1.3],
+            [0, 1.7], [0, -1.7]
+        ];
+        tubePositions.forEach(([y, z], i) => {
+            // Tubo cilíndrico
+            const tube = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.5, 0.5, 1.5, 20),
+                mat(0x556068)
+            );
+            tube.rotation.z = Math.PI / 2;
+            tube.position.set(c.x1 - 0.8, y, z);
+            parent.add(tube);
+            // Puerta culata (compuerta circular)
+            const door = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.5, 0.5, 0.1, 24),
+                mat(0x445)
+            );
+            door.rotation.z = Math.PI / 2;
+            door.position.set(c.x1 - 0.05, y, z);
+            parent.add(door);
+            // Volante de cierre
+            const w = new THREE.Mesh(
+                new THREE.TorusGeometry(0.18, 0.03, 8, 16),
+                mat(0xcc1010)
+            );
+            w.position.set(c.x1 + 0.02, y, z);
+            w.rotation.y = Math.PI / 2;
+            parent.add(w);
+            // Numeración
+            const numTex = makeCanvasTexture(64, 64, (ctx) => {
+                ctx.fillStyle = '#000'; ctx.fillRect(0,0,64,64);
+                ctx.fillStyle = '#ff0'; ctx.font = 'bold 36px Arial';
+                ctx.textAlign='center'; ctx.textBaseline='middle';
+                ctx.fillText(String(i + 1), 32, 32);
+            });
+            const num = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.18, 0.18),
+                new THREE.MeshBasicMaterial({ map: numTex })
+            );
+            num.position.set(c.x1 + 0.07, y + 0.3, z);
+            num.rotation.y = -Math.PI / 2;
+            parent.add(num);
+        });
+
+        // Carros / rieles de carga
+        cyl(parent, c.x0 + 5, FLOOR_Y + 0.1, -1.6, 0.04, 0.04, 6, 0x888, 'x');
+        cyl(parent, c.x0 + 5, FLOOR_Y + 0.1, 1.6, 0.04, 0.04, 6, 0x888, 'x');
+
+        // Cabina de control de armas
+        box(parent, c.x0 + 1, FLOOR_Y + 0.7, 0, 1.0, 1.4, 0.8, 0x222);
+        box(parent, c.x0 + 1, FLOOR_Y + 1.4, 0, 0.8, 0.5, 0.05, 0x002244);
+        // Botoneras laterales
+        for (let j = 0; j < 6; j++) {
+            box(parent, c.x0 + 1, FLOOR_Y + 1.0 + j*0.05, 0.42, 0.4, 0.04, 0.02,
+                j % 2 ? 0x00ff00 : 0xff0000);
+        }
+
+        // Polipasto (sistema de izado de torpedos)
+        cyl(parent, cx, CEIL_Y - 0.3, 0, 0.06, 0.06, 8, 0x222, 'x');
+        box(parent, cx, CEIL_Y - 0.5, 0, 0.4, 0.3, 0.4, 0x444);
+    }
+
+    // ===================== TEXTURA SALA DE CONTROL =====================
+    function loadControlRoomTexture() {
+        const dataUri = window.S80_PHOTOS && window.S80_PHOTOS['9fb562a5'];
+        if (!dataUri) {
+            addLog('Asset CIC no embebido', true);
+            return;
+        }
+        const loader = new THREE.TextureLoader();
+        loader.load(
+            dataUri,
+            (tex) => {
+                if ('SRGBColorSpace' in THREE) tex.colorSpace = THREE.SRGBColorSpace;
+                tex.anisotropy = 8;
+                controlRoomTex = tex;
+                if (scene.userData.controlRoomPhotoMesh) {
+                    scene.userData.controlRoomPhotoMesh.userData.assignTex(tex);
+                }
+                addLog('Foto CIC principal cargada (' + tex.image.width + 'x' + tex.image.height + ')');
+            },
+            undefined,
+            () => addLog('Error decodificando la foto CIC principal', true)
+        );
+    }
+
+    // ===================== FOTOS DE INTERIORES (paneles murales) =====================
+    function createPhotoPanel(parent, photo, tex) {
+        const c = COMPARTMENTS[photo.compartment];
+        const cx = (c.x0 + c.x1) / 2;
+        const sign = (photo.side === 'starboard') ? 1 : -1;
+        const wallZ = sign * 3.40;
+        const panelZ = sign * 3.36;
+        const yCenter = 0.25;
+
+        // Marco oscuro (fondo del cuadro, ligeramente mayor que la foto)
+        box(parent, cx, yCenter, wallZ, 2.55, 1.55, 0.04, 0x111);
+
+        let photoMat;
+        if (tex) {
+            // Para el lado de estribor, voltear la textura horizontalmente
+            // para compensar la rotación de 180° del plano.
+            if (sign > 0) {
+                tex.wrapS = THREE.RepeatWrapping;
+                tex.repeat.x = -1;
+                tex.offset.x = 1;
+                tex.needsUpdate = true;
+            }
+            photoMat = new THREE.MeshBasicMaterial({ map: tex });
+        } else {
+            photoMat = new THREE.MeshBasicMaterial({ color: 0x223344 });
+        }
+        const photoMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.45, 1.45), photoMat);
+        photoMesh.position.set(cx, yCenter, panelZ);
+        photoMesh.rotation.y = (sign > 0) ? Math.PI : 0;
+        parent.add(photoMesh);
+
+        // Foco superior (lámpara enfocando el cuadro)
+        const lampMat = new THREE.MeshBasicMaterial({ color: 0xfff2c0 });
+        const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.04, 0.08), lampMat);
+        lamp.position.set(cx, yCenter + 0.95, panelZ - sign * 0.15);
+        parent.add(lamp);
+        const lampLight = new THREE.PointLight(0xfff0c0, 0.25, 4, 2);
+        lampLight.position.set(cx, yCenter + 0.6, panelZ - sign * 0.1);
+        parent.add(lampLight);
+
+        // Cartel con el título debajo del cuadro
+        const titleTex = makeCanvasTexture(512, 64, (g) => {
+            g.fillStyle = '#0a1424'; g.fillRect(0, 0, 512, 64);
+            g.fillStyle = '#ffd54a'; g.font = 'bold 22px Arial';
+            g.textAlign = 'center'; g.textBaseline = 'middle';
+            g.fillText(photo.title, 256, 32);
+        });
+        if (sign > 0) {
+            titleTex.wrapS = THREE.RepeatWrapping;
+            titleTex.repeat.x = -1;
+            titleTex.offset.x = 1;
+            titleTex.needsUpdate = true;
+        }
+        const titleMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.45, 0.20),
+            new THREE.MeshBasicMaterial({ map: titleTex })
+        );
+        titleMesh.position.set(cx, yCenter - 0.85, panelZ);
+        titleMesh.rotation.y = (sign > 0) ? Math.PI : 0;
+        parent.add(titleMesh);
+    }
+
+    function loadInteriorPhotos(parent) {
+        const loader = new THREE.TextureLoader();
+        INTERIOR_PHOTOS.forEach(photo => {
+            const dataUri = window.S80_PHOTOS && window.S80_PHOTOS[photo.key];
+            if (!dataUri) {
+                addLog('✗ Asset no encontrado: ' + photo.key, true);
+                createPhotoPanel(parent, photo, null);
+                return;
+            }
+            loader.load(
+                dataUri,
+                (tex) => {
+                    if ('SRGBColorSpace' in THREE) tex.colorSpace = THREE.SRGBColorSpace;
+                    tex.anisotropy = 8;
+                    createPhotoPanel(parent, photo, tex);
+                    addLog('✓ ' + photo.title);
+                },
+                undefined,
+                () => {
+                    addLog('✗ Error decodificando: ' + photo.title, true);
+                    createPhotoPanel(parent, photo, null);
+                }
+            );
+        });
+    }
+
+    // ===================== JUGADOR =====================
+    function spawnPlayer() {
+        player = new THREE.Group();
+        player.position.set(0, 14, 35);
+        scene.add(player);
+        player.add(camera);
+        yaw = 0; pitch = -0.25;
+        player.rotation.y = yaw;
+        camera.rotation.x = pitch;
+    }
+
+    // ===================== CONTROLES =====================
+    function setupControls() {
+        // Pointer lock para ratón
+        const canvas = renderer.domElement;
+        const hint = document.getElementById('hint');
+        const cross = document.getElementById('crosshair');
+
+        canvas.addEventListener('click', () => {
+            if (!mouseLocked) canvas.requestPointerLock();
+        });
+        document.addEventListener('pointerlockchange', () => {
+            mouseLocked = (document.pointerLockElement === canvas);
+            hint.classList.toggle('hidden', mouseLocked);
+            cross.classList.toggle('active', mouseLocked);
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (!mouseLocked) return;
+            yaw   -= e.movementX * 0.0022;
+            pitch -= e.movementY * 0.0022;
+            pitch = Math.max(-1.45, Math.min(1.45, pitch));
+            player.rotation.y = yaw;
+            camera.rotation.x = pitch;
+        });
+
+        // Botones táctiles
+        const bind = (id, key) => {
+            const el = document.getElementById(id);
+            const start = (e) => { e.preventDefault(); move[key] = 1; el.classList.add('on'); };
+            const end   = (e) => { e.preventDefault(); move[key] = 0; el.classList.remove('on'); };
+            el.addEventListener('touchstart', start, { passive:false });
+            el.addEventListener('touchend',   end,   { passive:false });
+            el.addEventListener('touchcancel',end,   { passive:false });
+            el.addEventListener('mousedown',  start);
+            el.addEventListener('mouseup',    end);
+            el.addEventListener('mouseleave', end);
+        };
+        bind('fwd','fwd'); bind('back','back'); bind('left','left'); bind('right','right');
+        bind('up','up'); bind('down','down'); bind('rotL','rotL'); bind('rotR','rotR');
+
+        // Teclado
+        const keys = {
+            'KeyW':'fwd','ArrowUp':'fwd',
+            'KeyS':'back','ArrowDown':'back',
+            'KeyA':'left','KeyD':'right',
+            'KeyQ':'rotL','ArrowLeft':'rotL',
+            'KeyE':'rotR','ArrowRight':'rotR',
+            'Space':'up','ShiftLeft':'down','ControlLeft':'down'
+        };
+        addEventListener('keydown', e => { if (keys[e.code]) { move[keys[e.code]] = 1; e.preventDefault(); }});
+        addEventListener('keyup',   e => { if (keys[e.code]) { move[keys[e.code]] = 0; e.preventDefault(); }});
+
+        // Toggle casco
+        const hullBtn = document.getElementById('toggleHull');
+        const hullModes = [
+            { name: 'Semitransparente', apply: () => { hullMaterial.transparent = true; hullMaterial.opacity = 0.4; hullMaterial.visible = true; }},
+            { name: 'Opaco',            apply: () => { hullMaterial.transparent = false; hullMaterial.opacity = 1; hullMaterial.visible = true; }},
+            { name: 'Oculto',           apply: () => { hullMaterial.visible = false; }}
+        ];
+        let hi = 0;
+        hullBtn.addEventListener('click', () => {
+            hi = (hi + 1) % hullModes.length;
+            hullModes[hi].apply();
+            hullBtn.textContent = 'Casco: ' + hullModes[hi].name;
+        });
+
+        // Toggle velocidad
+        const spdBtn = document.getElementById('toggleSpeed');
+        const speeds = [['Normal', 1], ['Rápida (x3)', 3], ['Lenta (x0.4)', 0.4]];
+        let si = 0;
+        spdBtn.addEventListener('click', () => {
+            si = (si + 1) % speeds.length;
+            speedMultiplier = speeds[si][1];
+            spdBtn.textContent = 'Velocidad: ' + speeds[si][0];
+        });
+
+        // Teletransporte
+        document.getElementById('teleport').addEventListener('change', (e) => {
+            const tp = TELEPORT_POINTS[e.target.value];
+            if (!tp) return;
+            player.position.set(tp.p[0], tp.p[1], tp.p[2]);
+            yaw = tp.yaw; pitch = tp.pitch;
+            player.rotation.y = yaw;
+            camera.rotation.x = pitch;
+            e.target.value = '';
+        });
+    }
+
+    // ===================== ANIMACIÓN =====================
+    const locLabel = document.getElementById('locLabel');
+    const coordsLbl = document.getElementById('coords');
+
+    function updateUI() {
+        const p = player.position;
+        coordsLbl.textContent = 'x:' + p.x.toFixed(1) + '  y:' + p.y.toFixed(1) + '  z:' + p.z.toFixed(1);
+        const inside = (Math.abs(p.z) < HULL_RADIUS - 0.4) &&
+                       (p.y > FLOOR_Y - 0.2 && p.y < CEIL_Y + 0.2) &&
+                       (p.x > -HALF_L && p.x < HALF_L);
+        if (inside) {
+            const c = COMPARTMENTS.find(c => p.x >= c.x0 && p.x <= c.x1);
+            locLabel.textContent = c ? c.name : 'Interior';
+        } else if (p.y > 18.2) {
+            locLabel.textContent = 'Sobre el mar';
+        } else if (p.y < -10) {
+            locLabel.textContent = 'Aguas profundas';
+        } else {
+            locLabel.textContent = 'Exterior submarino';
+        }
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const dt = clock.getDelta();
+        const moveSpeed = 4.5 * dt * speedMultiplier;
+        const rotSpeed = 1.6 * dt;
+
+        if (move.fwd)   player.translateZ(-moveSpeed);
+        if (move.back)  player.translateZ( moveSpeed);
+        if (move.left)  player.translateX(-moveSpeed);
+        if (move.right) player.translateX( moveSpeed);
+        if (move.up)    player.position.y += moveSpeed;
+        if (move.down)  player.position.y -= moveSpeed;
+        if (move.rotL)  { yaw += rotSpeed; player.rotation.y = yaw; }
+        if (move.rotR)  { yaw -= rotSpeed; player.rotation.y = yaw; }
+
+        // Hélice atada al RPM del motor simulado
+        if (propeller) propeller.rotation.x += dt * (simSub.motorRpm.actual * 0.025);
+
+        // Tick del simulador y actualización del HUD
+        simTick(dt);
+        updateHud();
+
+        updateUI();
+        renderer.render(scene, camera);
+    }
+
+    addEventListener('resize', () => {
+        camera.aspect = innerWidth / innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(innerWidth, innerHeight);
+    });
+
+    init();
+    </script>
+</body>
+</html>
