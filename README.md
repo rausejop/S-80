@@ -1,8 +1,18 @@
-# S-80 Isaac Peral · Gemelo Digital 3D Interactivo
+# S-81 Isaac Peral · Gemelo Digital 3D Interactivo
 
-Recorrido virtual en tres dimensiones del submarino convencional español **S-80 Isaac Peral** (clase Isaac Peral, P-75I), reconstruido a partir de imágenes de referencia y especificaciones públicas. Permite explorar el exterior y el interior compartimento a compartimento, ver fotografías reales del interior aplicadas como texturas y operar todos los subsistemas desde un cockpit simulado al estilo SUBICS / CONAN-SUB.
+<p align="center">
+  <img src="https://armada.defensa.gob.es/ArmadaPortal/ShowBinaryServlet?nodePath=/BEA%20Repository/Desktops/Portal/ArmadaEspannola/Pages/buquessubmarinos/02s80/02IsaacPeralS81/01PeralS81-es/01Escudo//imagen&scale=none" alt="Escudo S-81 Isaac Peral" width="120">
+</p>
+
+Recorrido virtual en tres dimensiones del submarino convencional español **S-81 Isaac Peral** (primera unidad de la clase S-80, programa P-75I), reconstruido a partir de imágenes de referencia y especificaciones oficiales de la **Armada Española**. Permite explorar el exterior y el interior compartimento a compartimento, ver fotografías reales del interior aplicadas como texturas y operar todos los subsistemas desde un cockpit simulado al estilo SUBICS / CONAN-SUB con animaciones físicas en tiempo real.
 
 > Aplicación 100% cliente. Three.js + JavaScript vanilla. Sin dependencias de servidor. Funciona abriendo el HTML directamente en cualquier navegador moderno.
+
+## Vista de la aplicación
+
+![Captura del cockpit del S-81](screenshoot.jpg)
+
+*Cockpit completo del simulador: vista exterior del casco con tubos abiertos y bandera, panel de estado del buque con escudo oficial (arriba-derecha), sistema de armas con tubos T1-T6 (centro-derecha), propulsión y AIP (abajo-derecha), puesto de maniobra con 6 instrumentos circulares y EOT (abajo-izquierda), y panel de lastre y trimado (centro-inferior).*
 
 ---
 
@@ -183,6 +193,23 @@ El jugador es un cuerpo virtual con cámara colocada a la altura de los ojos. Pu
 | `E` / `→` | Girar a estribor |
 | `Espacio` | Subir verticalmente |
 | `Shift` o `Ctrl` | Bajar verticalmente |
+
+### Atajos de teclado del cockpit
+
+Cuando el cockpit HUD está activo, las siguientes teclas operan directamente los controles del puesto de maniobra:
+
+| Tecla | Acción |
+|---|---|
+| `1` | EOT → AT.AV (atrás avante / back full) |
+| `2` | EOT → AT.1/3 (atrás un tercio) |
+| `3` | EOT → PARO (stop) |
+| `4` | EOT → AV.1/3 (avante un tercio) |
+| `5` | EOT → AV.2/3 (avante dos tercios) |
+| `6` | EOT → EST. (estándar) |
+| `7` | EOT → TODA (toda avante) |
+| `8` | EOT → FLANCO (flank speed, 20,5 kn) |
+| `F` | Disparar el primer tubo en estado OPEN |
+| `P` | Toggle del periscopio (Izar / Bajar) |
 
 ### Controles táctiles (móvil/tableta)
 
@@ -470,6 +497,21 @@ El simulador es físicamente plausible (no es realismo de alta fidelidad). Cada 
 - Cada tubo es una máquina de estados independiente
 - Disparo: solo si hay tubo en OPEN. Marca FIRED durante 6 s, luego vuelve a EMPTY
 
+### Animaciones físicas del modelo 3D (`applyShipKinematics()`)
+
+El estado del simulador **mueve realmente los elementos visuales** del submarino a 60 fps:
+
+| Control del HUD | Efecto en el modelo 3D |
+|---|---|
+| **Profundidad simulada** | El **nivel del mar** sube relativamente (sea.y = 18 + (depth − 12)). Visible mirando hacia arriba al sumergirse |
+| **Planos de proa** ±25° | Las dos aletas horizontales sobre la vela rotan en Z según `bowPlanes.actual` — visualmente cabecean hacia arriba/abajo |
+| **Timón** ±35° + **Planos popa** ±25° | Las **4 aletas en X** deflectan combinando ambos comandos: cada una rota según su cuadrante — cuadrantes superiores `+pitch`, inferiores `−pitch`, babor `+yaw`, estribor `−yaw`. Deflección por fin = (signo·pitch + signo·yaw)/2 |
+| **Izar Periscopio** (botón 🔭 / tecla `P`) | El periscopio óptico y su cabeza suben **+2,5 m** sobre la vela suavemente |
+| **Izar Snorkel** (botón) | El mástil snorkel y su cabezal suben **+2,0 m** sobre la vela |
+| **Tubo OPEN** | La compuerta exterior (círculo en proa) y la interior (compuerta culata en sala torpedos) **desaparecen** mientras el tubo esté abierto |
+| **EOT** | El motor RPM converge a la consigna; la **hélice de 7 palas** gira proporcional al RPM real |
+| **Disparo** | El tubo se marca FIRED durante 6 s; al terminar vuelve a EMPTY y la compuerta reaparece |
+
 ---
 
 ## Imágenes de referencia
@@ -694,29 +736,89 @@ Es **normal**: no hay detección de colisiones por diseño, para facilitar la ex
 
 ---
 
-## Datos técnicos del S-80
+## Datos técnicos del S-81
 
-| Parámetro | Valor |
+> Fuente: [Página oficial de la Armada Española](https://armada.defensa.gob.es/ArmadaPortal/page/Portal/ArmadaEspannola/buquessubmarinos/prefLang-es/02s80--02IsaacPeralS81)
+
+### Características principales (datos Armada)
+
+| Parámetro | Valor oficial |
 |---|---|
-| **Eslora total** | 81,05 m (S-81 original 71 m, alargado 10 m por corrección de estabilidad) |
-| **Manga** | 7,3 m |
-| **Calado** | 6,2 m |
-| **Desplazamiento sumergido** | ~3.000 t |
-| **Velocidad superficie** | ~12 kn |
-| **Velocidad sumergido** | 19 kn (snorkeling), >20 kn (motor eléctrico) |
-| **Profundidad máxima** | >300 m operativa |
-| **Autonomía AIP** | ~3 semanas sumergido sin snorkel |
-| **Autonomía total** | 50 días en patrulla |
-| **Tripulación** | 32 + 8 operadores especiales |
-| **Diésel** | 3 × MTU 16V 396 SE84 |
-| **AIP** | Reformador de bioetanol + pila de combustible H₂/O₂ (LOX) |
-| **Propulsión** | 1 motor eléctrico de imanes permanentes, 1 hélice de 7 palas |
-| **Sistema combate** | SUBICS (Lockheed Martin) + SCOMBA (Navantia) — 7 consolas MFCC + LTD |
-| **Consolas operador** | CONAN-SUB (SAINSEL) |
-| **Sonar** | S-Cube (Thales) — array cilíndrico, flanco, hidrófono remolcado, intercept |
-| **Armamento** | 6 tubos de 533 mm, 18 armas: torpedos DM2A4 SeaHake (Atlas Elektronik) y SUT, misiles Sub-Harpoon, minas, capacidad de operaciones especiales (DDS) |
-| **Astillero** | Navantia, Cartagena |
-| **Unidades** | S-81 Isaac Peral · S-82 Narciso Monturiol · S-83 Cosme García · S-84 Mateo García de los Reyes |
+| **Eslora** | **80,81 m** |
+| **Manga** | **11,68 m** |
+| **Calado** | **6,77 m** |
+| **Desplazamiento superficie** | **2.695 t** |
+| **Desplazamiento inmersión** | **2.965 t** |
+| **Velocidad superficie** | **12 nudos** |
+| **Velocidad inmersión** | **20,5 nudos** |
+| **Autonomía** | **4.500 millas** a 18 nudos |
+| **Tripulación** | **40** (8 oficiales + 15 suboficiales + 17 marinería) |
+| **Tubos lanzatorpedos** | **6** (calibre 533 mm) |
+| **Base** | Arsenal de Cartagena · Base de Submarinos |
+| **Entrega a la Armada** | 30 de noviembre de 2023 |
+
+### Propulsión (datos Armada)
+
+| Sistema | Potencia | Notas |
+|---|---|---|
+| 3 × Diésel-generadores | **1.100 kW** c/u (3.300 kW total) | Marca MTU 16V 396 SE84 |
+| 1 × Motor eléctrico principal | **3.500 kW** | Imanes permanentes, 1 hélice 7 palas |
+| 1 × Sistema AIP (célula combustible) | **300 kW** | Bioetanol + LOX → H₂. Incluido desde la 3ª unidad; S-81 y S-82 lo recibirán tras la primera gran carena (7 años post-entrega) |
+
+### Armamento (datos Armada)
+
+| Tipo | Modelo | Cometido |
+|---|---|---|
+| Torpedos | **Seahake mod 4** (Atlas Elektronik, Alemania) | Anti-buque y anti-submarino, alcance hasta 50 km |
+| Misiles | **Sub-Harpoon Bloque II** | Anti-buque y blancos costeros |
+| Minas | Lanzadas por tubo | Minado ofensivo |
+
+### Sensores
+
+- Sónares: cilíndrico, de flanco, remolcado, interceptador, medidor de distancias, detector de minas y obstáculos
+- Antenas en cota periscópica: VHF, UHF, HF, **Link 22**, AIS
+- Radar de superficie
+- Periscopios: **optrónico** y de **ataque**
+
+### Sistema de combate y consolas
+
+| Componente | Fabricante |
+|---|---|
+| Sistema combate integrado | **SUBICS** (Lockheed Martin) |
+| Núcleo del sistema combate | **SCOMBA** (Navantia) |
+| Consolas multifunción (MFCC) | 7 unidades — operación con 4-7 operadores |
+| Consolas operativas | **CONAN-SUB** (SAINSEL) |
+| Large Tactical Display (LTD) | Pantalla del Comandante |
+
+### Historia
+
+- **Diseñado y construido en España** — primer submarino íntegramente nacional desde 1888 (año del submarino Peral original)
+- **Madrina**: Princesa de Asturias **Doña Leonor de Borbón** — bautizo el 22 de abril de 2021
+- **Puesta a flote**: 7 de mayo de 2021
+- **Primera salida a la mar (en superficie)**: 27 de mayo de 2021
+- **Entrega a la Armada Española**: 30 de noviembre de 2023
+- **Astillero**: Navantia, Cartagena
+
+### Misiones (según Armada)
+
+> *"Los submarinos son unidades de gran capacidad ofensiva, que poseen la ventaja de poder operar de forma encubierta durante largos períodos de tiempo."*
+
+- Garantizar la protección de una fuerza naval
+- Misiones de obtención de inteligencia, reconocimiento y alerta temprana
+- Neutralización de amenazas tanto de superficie como submarinas
+- Infiltración en costa de equipos de operaciones especiales
+- Defensa de los espacios marítimos
+- Plataforma de adiestramiento interno y para otras unidades
+- Minado ofensivo, reconocimiento fotográfico de costa, negación del uso del mar
+
+### Unidades de la clase S-80
+
+| Buque | Bautizado por |
+|---|---|
+| **S-81 Isaac Peral** | Princesa de Asturias Doña Leonor (entregado 2023) |
+| **S-82 Narciso Monturiol** | — |
+| **S-83 Cosme García** | — |
+| **S-84 Mateo García de los Reyes** | — |
 
 ---
 

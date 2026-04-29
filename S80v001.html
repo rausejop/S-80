@@ -278,13 +278,22 @@
     <div id="log-panel"></div>
 
     <div id="info-panel">
-        <h3>S-80 ISAAC PERAL</h3>
-        <div>Eslora total: <b>81,05 m</b></div>
-        <div>Manga: <b>7,3 m</b></div>
-        <div>Calado: <b>6,2 m</b></div>
-        <div>Desplazamiento: <b>~3.000 t</b></div>
-        <div>Propulsión: AIP bioetanol + diésel</div>
-        <div>Tripulación: 32 + 8 op. especiales</div>
+        <img id="escudo-img"
+             src="https://armada.defensa.gob.es/ArmadaPortal/ShowBinaryServlet?nodePath=/BEA%20Repository/Desktops/Portal/ArmadaEspannola/Pages/buquessubmarinos/02s80/02IsaacPeralS81/01PeralS81-es/01Escudo//imagen&scale=none"
+             alt="Escudo S-81"
+             style="float:right;width:64px;height:auto;margin:-4px 0 4px 6px;filter:drop-shadow(0 0 4px rgba(0,0,0,0.6));"
+             onerror="this.style.display='none'">
+        <h3 style="margin:0 0 4px 0;">S-81 ISAAC PERAL</h3>
+        <div style="font-size:10px;color:#9bd;margin-bottom:4px;">Clase S-80 · Armada Española</div>
+        <div>Eslora: <b>80,81 m</b> · Manga: <b>11,68 m</b></div>
+        <div>Calado: <b>6,77 m</b></div>
+        <div>Desplazamiento: <b>2.695 / 2.965 t</b> (sup./inm.)</div>
+        <div>Vel. máxima: <b>12 / 20,5 kn</b></div>
+        <div>Autonomía: <b>4.500 nm</b> a 18 kn</div>
+        <div>Propulsión: 3 diésel × 1.100 kW + ME 3.500 kW + AIP 300 kW</div>
+        <div>Armas: 6 tubos · Seahake mod 4 · Sub-Harpoon Bk II</div>
+        <div>Dotación: <b>40</b> (8 ofic · 15 sof · 17 mar)</div>
+        <div>Entrega: 30 nov 2023 · Cartagena</div>
         <hr>
         <div>Ubicación: <span class="loc" id="locLabel">Exterior</span></div>
         <div class="small" id="coords">x:0 y:0 z:0</div>
@@ -337,7 +346,16 @@
 
       <!-- ESTADO DEL BUQUE -->
       <div class="hud-panel" id="status-panel">
-        <div class="hud-title"><span>Estado del Buque</span></div>
+        <div class="hud-title"><span>S-81 Isaac Peral · Armada</span></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+            <img src="https://armada.defensa.gob.es/ArmadaPortal/ShowBinaryServlet?nodePath=/BEA%20Repository/Desktops/Portal/ArmadaEspannola/Pages/buquessubmarinos/02s80/02IsaacPeralS81/01PeralS81-es/01Escudo//imagen&scale=none"
+                 style="width:48px;height:auto;flex-shrink:0;" onerror="this.style.display='none'">
+            <div style="font-size:9px;line-height:1.25;color:#9bd;">
+                Clase S-80 · 80,81 × 11,68 m<br>
+                2.695/2.965 t · 40 dotación<br>
+                Cartagena · entrega 30-11-2023
+            </div>
+        </div>
         <div class="status-row"><span>Rumbo</span><span class="hud-val" id="hud-hdg">000°</span></div>
         <div class="status-row"><span>Profundidad</span><span class="hud-val" id="hud-depth">0,0 m</span></div>
         <div class="status-row"><span>Velocidad</span><span class="hud-val" id="hud-speed">0,0 kn</span></div>
@@ -389,7 +407,7 @@
           <button data-helm="rudder" data-d="-5">◀ Babor 5°</button>
           <button data-helm="rudder" data-d="0">Centro Timón</button>
           <button data-helm="rudder" data-d="5">Estribor 5° ▶</button>
-          <button data-helm="periscope">🔭 Izar Periscopio</button>
+          <button data-helm="periscope" id="btn-periscope">🔭 Izar Periscopio</button>
           <button data-helm="bowplanes" data-d="-5">▼ Pl.proa abajo</button>
           <button data-helm="bowplanes" data-d="0">Pl.proa cero</button>
           <button data-helm="bowplanes" data-d="5">▲ Pl.proa arriba</button>
@@ -542,6 +560,18 @@
     let propeller, hullMaterial, controlRoomTex;
     let yaw = 0, pitch = -0.25, mouseLocked = false;
     let speedMultiplier = 1;
+
+    // Referencias a elementos animables (controlados por el HUD)
+    const animatable = {
+        sea: null, seaY0: 18,
+        bowPlanes: [],         // {mesh, baseRotZ}
+        xRudders: [],          // {mesh, ang, baseRotX}
+        masts: {},             // {optical, opticalHead, esm, esmHead, snorkel, snorkelHead}
+        mastsY0: {},           // y base
+        tubeExterior: [],      // 6 círculos exteriores en proa
+        tubeInteriorDoors: [], // 6 compuertas interiores
+        flag: null
+    };
     const clock = new THREE.Clock();
     const move = { fwd:0, back:0, left:0, right:0, up:0, down:0, rotL:0, rotR:0 };
 
@@ -579,6 +609,7 @@
     }
 
     // ===================== SIMULADOR / COCKPIT =====================
+    // Estado del simulador con valores oficiales del S-81 (Armada Española)
     const simSub = {
         rudder:      { ordered: 0, actual: 0, max: 35 },
         bowPlanes:   { ordered: 0, actual: 0, max: 25 },
@@ -586,21 +617,23 @@
         throttle: 'ahead-1/3',
         motorRpm: { ordered: 50, actual: 0 },
         speed: 0, depth: 12, heading: 0,
-        aipOn: true, aipPct: 100,
-        dieselOn: false, dieselRpm: 0,
+        aipOn: true, aipPct: 100,           // AIP 300 kW
+        dieselOn: false, dieselRpm: 0,       // 3 × MTU 16V 396 SE84 — 1.100 kW c/u
         battery: 87, batteryDir: 'discharge',
-        snorkel: false, loxPct: 94, etohPct: 82,
-        shaftPower: 0,
+        snorkel: false, snorkelTarget: 0,    // 0 = bajo, 1 = izado
+        periscopeUp: false, periscopeTarget: 0,
+        loxPct: 94, etohPct: 82,
+        shaftPower: 0,                       // Motor eléctrico principal — 3.500 kW
         pressure: 2.18, o2: 20.9, co2: 0.07, temp: 22, humidity: 52,
-        position: { lat: 36.05, lon: -5.42 },
+        position: { lat: 37.59, lon: -0.99 }, // Cartagena (base de submarinos)
         mbt: [50, 50, 50, 50, 50],
         trimFwd: 30, trimAft: 30, neg: 0, aux: 15,
         tubes: [
+            { state: 'LOADED',  weapon: 'DM2A4' },     // Seahake mod 4
             { state: 'LOADED',  weapon: 'DM2A4' },
+            { state: 'LOADED',  weapon: 'SubHARP' },   // Sub-Harpoon Bk II
+            { state: 'EMPTY',   weapon: null },
             { state: 'LOADED',  weapon: 'DM2A4' },
-            { state: 'EMPTY',   weapon: null },
-            { state: 'EMPTY',   weapon: null },
-            { state: 'LOADED',  weapon: 'SUT' },
             { state: 'EMPTY',   weapon: null }
         ],
         contacts: [
@@ -612,6 +645,8 @@
         hudOn: true,
         sonarTime: 0
     };
+    // EOT - rangos calibrados para alcanzar 20,5 kn a flanco (datos oficiales Armada)
+    // velocidad = RPM × 0,108 kn/rpm  →  flank=190 RPM ≈ 20,5 kn
     const THROTTLE_RPM = {
         'back-full': -150, 'back-1/3': -50, 'stop': 0,
         'ahead-1/3': 50, 'ahead-2/3': 100, 'standard': 130, 'full': 160, 'flank': 190
@@ -657,11 +692,18 @@
                     document.querySelector('[data-throttle="flank"]').classList.add('active');
                     addLog('⚠ INMERSIÓN DE EMERGENCIA');
                 } else if (h === 'periscope') {
-                    const p = TELEPORT_POINTS.bridge;
-                    player.position.set(p.p[0], p.p[1], p.p[2]);
-                    yaw = p.yaw; pitch = p.pitch;
-                    player.rotation.y = yaw; camera.rotation.x = pitch;
-                    addLog('Periscopio izado · cofa de la vela');
+                    simSub.periscopeUp = !simSub.periscopeUp;
+                    document.getElementById('btn-periscope').textContent =
+                        simSub.periscopeUp ? '🔭 Bajar Periscopio' : '🔭 Izar Periscopio';
+                    if (simSub.periscopeUp) {
+                        const p = TELEPORT_POINTS.bridge;
+                        player.position.set(p.p[0], p.p[1], p.p[2]);
+                        yaw = p.yaw; pitch = p.pitch;
+                        player.rotation.y = yaw; camera.rotation.x = pitch;
+                        addLog('🔭 Periscopio IZADO · vista desde la cofa');
+                    } else {
+                        addLog('🔭 Periscopio BAJADO');
+                    }
                 } else if (h === 'surface') {
                     simSub.bowPlanes.ordered = 15;
                     simSub.sternPlanes.ordered = 15;
@@ -785,7 +827,8 @@
 
         simSub.motorRpm.ordered = THROTTLE_RPM[simSub.throttle];
         simSub.motorRpm.actual = k(simSub.motorRpm.actual, simSub.motorRpm.ordered, 0.4);
-        simSub.speed = simSub.motorRpm.actual * 0.06;
+        // Datos oficiales Armada: 20,5 kn máx en inmersión a 190 RPM → 0,108 kn/rpm
+        simSub.speed = simSub.motorRpm.actual * 0.108;
 
         simSub.heading += simSub.rudder.actual * Math.abs(simSub.speed) * 0.04 * dt;
         simSub.heading = ((simSub.heading % 360) + 360) % 360;
@@ -819,7 +862,11 @@
             simSub.battery = Math.max(0, simSub.battery - dt * drain);
             simSub.batteryDir = 'discharge';
         }
-        simSub.shaftPower = Math.abs(simSub.motorRpm.actual) * 4.5;
+        // Motor eléctrico principal: 3.500 kW oficial → ~18,4 kW/rpm a 190 RPM
+        simSub.shaftPower = Math.abs(simSub.motorRpm.actual) * 18.4;
+        // Animación suave de mástiles (snorkel + periscopio)
+        simSub.snorkelTarget    = k(simSub.snorkelTarget,    simSub.snorkel    ? 1 : 0, 0.6);
+        simSub.periscopeTarget  = k(simSub.periscopeTarget,  simSub.periscopeUp ? 1 : 0, 0.6);
 
         // Posición geográfica (avance lento sobre el mapa)
         const hdgRad = simSub.heading * Math.PI / 180;
@@ -1165,6 +1212,8 @@
         sea.rotation.x = -Math.PI / 2;
         sea.position.y = 18;
         scene.add(sea);
+        animatable.sea = sea;
+        animatable.seaY0 = 18;
 
         // Lecho marino arenoso
         const seabed = new THREE.Mesh(
@@ -1291,44 +1340,60 @@
         const mastMat = mat(0x0d0d0d, { shininess: 80 });
         const mastShinyMat = mat(0x444, { shininess: 100 });
 
-        // Periscopio óptico
+        // Periscopio óptico (animable con izar/bajar)
         const perOpt = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 5.2, 12), mastShinyMat);
         perOpt.position.set(SAIL_X + 0.5, HULL_RADIUS + 6.6, 0);
         parent.add(perOpt);
-        // Cabeza del periscopio
+        animatable.masts.optical = perOpt;
+        animatable.mastsY0.optical = HULL_RADIUS + 6.6;
+
         const perHead = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.5), mastMat);
         perHead.position.set(SAIL_X + 0.5, HULL_RADIUS + 9.4, 0);
         parent.add(perHead);
+        animatable.masts.opticalHead = perHead;
+        animatable.mastsY0.opticalHead = HULL_RADIUS + 9.4;
 
         // Mástil ESM
         const esm = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 5.5, 10), mastMat);
         esm.position.set(SAIL_X - 1.5, HULL_RADIUS + 6.8, 0);
         parent.add(esm);
+        animatable.masts.esm = esm;
+        animatable.mastsY0.esm = HULL_RADIUS + 6.8;
+
         const esmHead = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 8), mastMat);
         esmHead.position.set(SAIL_X - 1.5, HULL_RADIUS + 9.7, 0);
         parent.add(esmHead);
+        animatable.masts.esmHead = esmHead;
+        animatable.mastsY0.esmHead = HULL_RADIUS + 9.7;
 
-        // Snorkel
+        // Snorkel (animable con izar/bajar)
         const snork = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 4.5, 10), mastMat);
         snork.position.set(SAIL_X - 3.4, HULL_RADIUS + 6.3, 0);
         parent.add(snork);
+        animatable.masts.snorkel = snork;
+        animatable.mastsY0.snorkel = HULL_RADIUS + 6.3;
+
         const snorkHead = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.4, 0.5), mastMat);
         snorkHead.position.set(SAIL_X - 3.4, HULL_RADIUS + 8.7, 0);
         parent.add(snorkHead);
+        animatable.masts.snorkelHead = snorkHead;
+        animatable.mastsY0.snorkelHead = HULL_RADIUS + 8.7;
 
         // Antena comm
         const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 6, 8), mastMat);
         ant.position.set(SAIL_X + 2.5, HULL_RADIUS + 7.0, 0);
         parent.add(ant);
 
-        // Aletas de buceo de proa (sobre la vela)
+        // Aletas de buceo de proa (sobre la vela) - animables con bowPlanes
         const planeMat = mat(0x1a1f25);
         const fwdL = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.18, 5.5), planeMat);
         fwdL.position.set(SAIL_X, HULL_RADIUS + 1.7, 3.5);
         parent.add(fwdL);
+        animatable.bowPlanes.push({ mesh: fwdL, baseRotZ: 0 });
         const fwdR = fwdL.clone();
         fwdR.position.z = -3.5;
         parent.add(fwdR);
+        animatable.bowPlanes.push({ mesh: fwdR, baseRotZ: 0 });
 
         // Placa "S-81" en la vela
         const plateTex = makeCanvasTexture(256, 128, (ctx) => {
@@ -1365,7 +1430,7 @@
     function buildSternFeatures(parent) {
         const rudMat = mat(0x1a1f25);
 
-        // Timones en X (4 aletas a 45°, 135°, 225°, 315°)
+        // Timones en X (4 aletas a 45°, 135°, 225°, 315°) - animables
         const xRudGeo = new THREE.BoxGeometry(5, 0.25, 5.5);
         for (let i = 0; i < 4; i++) {
             const ang = Math.PI / 4 + i * Math.PI / 2;
@@ -1375,6 +1440,7 @@
             r.position.y = Math.cos(ang) * (HULL_RADIUS + 1.7);
             r.position.z = Math.sin(ang) * (HULL_RADIUS + 1.7);
             parent.add(r);
+            animatable.xRudders.push({ mesh: r, ang: ang, baseRotX: ang });
         }
 
         // Eje de la hélice
@@ -1435,18 +1501,19 @@
         dome.position.set(HALF_L - 6, 0, 0);
         parent.add(dome);
 
-        // Tubos de torpedos exteriores (6, dispuestos en racimo)
+        // Tubos de torpedos exteriores (6, dispuestos en racimo) - animables
         const tubeMat = mat(0x444);
         const positions = [
             [0.95, 1.3], [0.95, -1.3],
             [-0.95, 1.3], [-0.95, -1.3],
             [0, 1.7], [0, -1.7]
         ];
-        positions.forEach(([y, z]) => {
+        positions.forEach(([y, z], i) => {
             const tube = new THREE.Mesh(new THREE.CircleGeometry(0.45, 16), tubeMat);
             tube.position.set(HALF_L - 4, y, z);
             tube.rotation.y = Math.PI / 2;
             parent.add(tube);
+            animatable.tubeExterior[i] = tube;
         });
 
         // Anclajes / cleats sobre la cubierta
@@ -2100,7 +2167,7 @@
             tube.rotation.z = Math.PI / 2;
             tube.position.set(c.x1 - 0.8, y, z);
             parent.add(tube);
-            // Puerta culata (compuerta circular)
+            // Puerta culata (compuerta circular) - animable según estado del tubo
             const door = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.5, 0.5, 0.1, 24),
                 mat(0x445)
@@ -2108,6 +2175,7 @@
             door.rotation.z = Math.PI / 2;
             door.position.set(c.x1 - 0.05, y, z);
             parent.add(door);
+            animatable.tubeInteriorDoors[i] = door;
             // Volante de cierre
             const w = new THREE.Mesh(
                 new THREE.TorusGeometry(0.18, 0.03, 8, 16),
@@ -2324,6 +2392,27 @@
         addEventListener('keydown', e => { if (keys[e.code]) { move[keys[e.code]] = 1; e.preventDefault(); }});
         addEventListener('keyup',   e => { if (keys[e.code]) { move[keys[e.code]] = 0; e.preventDefault(); }});
 
+        // Atajos de teclado del COCKPIT (números 1-8 = EOT, F = fuego)
+        addEventListener('keydown', e => {
+            if (!simSub.hudOn) return;
+            const eotMap = { 'Digit1':'back-full', 'Digit2':'back-1/3', 'Digit3':'stop',
+                             'Digit4':'ahead-1/3', 'Digit5':'ahead-2/3', 'Digit6':'standard',
+                             'Digit7':'full', 'Digit8':'flank' };
+            if (eotMap[e.code]) {
+                const t = eotMap[e.code];
+                simSub.throttle = t;
+                document.querySelectorAll('.eot-btn').forEach(b =>
+                    b.classList.toggle('active', b.dataset.throttle === t));
+                addLog('EOT (tecla) → ' + t);
+                e.preventDefault();
+            }
+            if (e.code === 'KeyF' && !e.repeat) { fireWeapon(); e.preventDefault(); }
+            if (e.code === 'KeyP' && !e.repeat) {
+                document.getElementById('btn-periscope').click();
+                e.preventDefault();
+            }
+        });
+
         // Toggle casco
         const hullBtn = document.getElementById('toggleHull');
         const hullModes = [
@@ -2382,6 +2471,59 @@
         }
     }
 
+    // Aplica el estado del simulador a la geometría 3D del submarino
+    // Hace que los controles del HUD muevan físicamente el modelo en pantalla
+    function applyShipKinematics() {
+        // 1. NIVEL DEL MAR según profundidad (cuanto más hundido, mar más arriba)
+        if (animatable.sea) {
+            animatable.sea.position.y = animatable.seaY0 + (simSub.depth - 12);
+        }
+
+        // 2. PLANOS DE PROA - rotación de cabeceo según bowPlanes.actual
+        const bowDeg2Rad = simSub.bowPlanes.actual * Math.PI / 180;
+        animatable.bowPlanes.forEach(p => {
+            p.mesh.rotation.z = p.baseRotZ + bowDeg2Rad;
+        });
+
+        // 3. TIMONES EN X - cada aleta deflecta combinando timón + planos popa
+        // Convención: en config X, cada fin a 45/135/225/315° contribuye a yaw y pitch
+        // Pitch (sternplanes): fins superiores +, inferiores -
+        // Yaw (rudder): fins babor +, estribor -
+        const stern = simSub.sternPlanes.actual * Math.PI / 180;
+        const rud   = simSub.rudder.actual      * Math.PI / 180;
+        animatable.xRudders.forEach((r, idx) => {
+            // Cuadrante: 0=upper-stbd 45°, 1=upper-port 135°, 2=lower-port 225°, 3=lower-stbd 315°
+            const isUpper = (idx === 0 || idx === 1);
+            const isPort  = (idx === 1 || idx === 2);
+            const pitchSign = isUpper ?  1 : -1;
+            const yawSign   = isPort  ?  1 : -1;
+            const deflection = (pitchSign * stern + yawSign * rud) * 0.5;
+            r.mesh.rotation.x = r.baseRotX + deflection;
+        });
+
+        // 4. PERISCOPIO - se eleva 2,5 m cuando está izado
+        const perDelta = simSub.periscopeTarget * 2.5;
+        if (animatable.masts.optical) {
+            animatable.masts.optical.position.y     = animatable.mastsY0.optical     + perDelta;
+            animatable.masts.opticalHead.position.y = animatable.mastsY0.opticalHead + perDelta;
+        }
+
+        // 5. SNORKEL - se eleva 2,0 m cuando está izado
+        const snorkDelta = simSub.snorkelTarget * 2.0;
+        if (animatable.masts.snorkel) {
+            animatable.masts.snorkel.position.y     = animatable.mastsY0.snorkel     + snorkDelta;
+            animatable.masts.snorkelHead.position.y = animatable.mastsY0.snorkelHead + snorkDelta;
+        }
+
+        // 6. COMPUERTAS DE TUBO - se ocultan cuando el tubo está OPEN
+        for (let i = 0; i < 6; i++) {
+            const t = simSub.tubes[i];
+            const isOpen = (t && t.state === 'OPEN');
+            if (animatable.tubeExterior[i])      animatable.tubeExterior[i].visible      = !isOpen;
+            if (animatable.tubeInteriorDoors[i]) animatable.tubeInteriorDoors[i].visible = !isOpen;
+        }
+    }
+
     function animate() {
         requestAnimationFrame(animate);
         const dt = clock.getDelta();
@@ -2400,8 +2542,9 @@
         // Hélice atada al RPM del motor simulado
         if (propeller) propeller.rotation.x += dt * (simSub.motorRpm.actual * 0.025);
 
-        // Tick del simulador y actualización del HUD
+        // Tick del simulador, animación física del modelo y actualización del HUD
         simTick(dt);
+        applyShipKinematics();
         updateHud();
 
         updateUI();
